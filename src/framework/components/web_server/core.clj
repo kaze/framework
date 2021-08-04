@@ -84,17 +84,32 @@
     :as   app-config}
    system
    routes]
-  (fn [http-request]
-    (->
-      (xiana/flow->
+  (fn
+    ([http-request]
+     (->
+       (xiana/flow->
+         (state-build app-config system routes http-request)
+         (runner/run router-interceptors route)
+         (additional-interceptors controller-interceptors run-controller))
+       (xiana/extract)
+       ((fn [x]
+          (println x)
+          x))
+       (get :response)))
+    ([http-request respond raise]
+     (respond
+      (->
+       (xiana/flow->
         (state-build app-config system routes http-request)
         (runner/run router-interceptors route)
         (additional-interceptors controller-interceptors run-controller))
-      (xiana/extract)
-      ((fn [x]
+       (xiana/extract)
+       ((fn [x]
          (println x)
          x))
-      (get :response))))
+       (get :response))))))
+      
+  
 
 (defn ->web-server
   [{web-cfg :framework.app/web-server
