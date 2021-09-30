@@ -1,11 +1,11 @@
 --;;
-DROP DATABASE IF EXISTS framework;
+DROP DATABASE IF EXISTS xiana;
 
 --;;
-CREATE DATABASE framework;
+CREATE DATABASE xiana;
 
 --;;
-GRANT ALL PRIVILEGES ON DATABASE framework TO postgres;
+GRANT ALL PRIVILEGES ON DATABASE xiana TO postgres;
 
 --;;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

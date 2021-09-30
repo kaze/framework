@@ -26,7 +26,7 @@ _CONFIG=./config/test/config.edn
 
 # sql script
 _DB_USER=postgres
-_DB_NAME=framework
+_DB_NAME=xiana
 _DB_SCRIPT=/sql/test.sql
 
 usage ()
@@ -248,7 +248,7 @@ _setup ()
 
 _tests ()
 {
-    env FRAMEWORK_EDN_CONFIG=${_CONFIG} lein test
+    env XIANA_EDN_CONFIG=${_CONFIG} lein test
 }
 
 _stops ()

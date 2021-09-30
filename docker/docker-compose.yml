@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: postgres.dockerfile
     # environment:
-    #   POSTGRES_DB: framework
+    #   POSTGRES_DB: xiana
     volumes:
         - ./sql-scripts:/sql
         # - db-data:/var/lib/postgresql/data
