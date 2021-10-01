@@ -1,4 +1,4 @@
-(ns xiana.interceptor.muuntaja
+(ns xiana.muuntaja
   "Muuntaja interceptor encoder/decode.."
   (:require
     [clojure.data.xml :as xml]
@@ -6,7 +6,8 @@
     [muuntaja.core]
     [muuntaja.format.core]
     [muuntaja.format.json :as json]
-    [muuntaja.interceptor]))
+    [muuntaja.interceptor]
+    [xiana.interceptor.wrap :as wrap]))
 
 (defn xml-encoder
   "XML encoder."
@@ -39,6 +40,9 @@
         (assoc-in [:formats "application/json" :encoder-opts :date-format]
                   "yyyy-MM-dd"))))
 
-(def interceptor
+(defn interceptor
   "Define muuntaja's default interceptor."
-  (muuntaja.interceptor/format-interceptor instance))
+  ([]
+   (wrap/interceptor (muuntaja.interceptor/format-interceptor instance)))
+  ([interceptor]
+   (wrap/interceptor interceptor)))

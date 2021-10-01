@@ -3,7 +3,8 @@
     [clojure.test :refer [deftest is]]
     [xiana.core :as xiana]
     [xiana.db :as db]
-    [xiana.interceptor :as interceptor]))
+    [xiana.interceptor :as interceptor]
+    [xiana.muuntaja :as muuntaja]))
 
 (def sample-session-id
   "Sample session id."
@@ -156,5 +157,5 @@
              (nil? (get-in simple-resp [:session-data :authorization]))))))
 
 (deftest contains-muuntaja-interceptor
-  (let [interceptor (interceptor/muuntaja)]
+  (let [interceptor (muuntaja/interceptor)]
     (is (not (empty? interceptor)))))

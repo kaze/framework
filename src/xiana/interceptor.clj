@@ -4,8 +4,6 @@
     [clojure.walk :refer [keywordize-keys]]
     [ring.middleware.params :as middleware.params]
     [xiana.core :as xiana]
-    [xiana.interceptor.muuntaja :as muuntaja]
-    [xiana.interceptor.wrap :as wrap]
     [xiana.session :as session])
   (:import
     (java.util
@@ -127,8 +125,3 @@
             (f state role)
           ;; associate authorization into session-data
             (assoc-in [:session-data :authorization] auth)))))}))
-
-(defn muuntaja
-  "Muuntaja encoder/decoder interceptor."
-  ([] (muuntaja muuntaja/interceptor))
-  ([interceptor] (wrap/interceptor interceptor)))

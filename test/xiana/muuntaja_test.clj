@@ -1,8 +1,8 @@
-(ns xiana.interceptor.muuntaja-test
+(ns xiana.muuntaja-test
   (:require
     [clojure.test :refer [deftest is]]
     [muuntaja.format.core :as format]
-    [xiana.interceptor.muuntaja :as muuntaja]))
+    [xiana.muuntaja :as muuntaja]))
 
 (def data-sample [["note" "anything" "note"]])
 
