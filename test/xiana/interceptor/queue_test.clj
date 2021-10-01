@@ -1,6 +1,6 @@
 (ns xiana.interceptor.queue-test
   (:require
-    [clojure.test :refer :all]
+    [clojure.test :refer [deftest is]]
     [xiana.core :as xiana]
     [xiana.interceptor.queue :as queue]))
 
@@ -18,12 +18,12 @@
 
 ;; Exception
 (def D-interceptor
-  {:enter (fn [state] (throw (Exception. "enter-exception")))})
+  {:enter (fn [_] (throw (Exception. "enter-exception")))})
 
 ;; Error/Exception
 (def E-interceptor
-  {:enter (fn [state] (throw (Exception. "enter-exception")))
-   :leave (fn [state] (throw (Exception. "leave-exception")))
+  {:enter (fn [_] (throw (Exception. "enter-exception")))
+   :leave (fn [_] (throw (Exception. "leave-exception")))
    :error (fn [state] (xiana/ok (assoc state :error "Error")))})
 
 (def F-interceptor

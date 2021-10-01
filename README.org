@@ -121,8 +121,8 @@
      (:require
       ;; mandatory modules to build/run any web application
       [xiana.core :as xiana]
-      [xiana.route.core :as route]
-      [xiana.webserver.core :as webserver]))
+      [xiana.route :as route]
+      [xiana.webserver :as webserver]))
 
    ;; application route definitions
    (def app-routes

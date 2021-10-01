@@ -1,6 +1,6 @@
 (ns xiana.route.helpers-test
   (:require
-    [clojure.test :refer :all]
+    [clojure.test :refer [deftest is]]
     [xiana.core :as xiana]
     [xiana.route.helpers :as helpers]))
 

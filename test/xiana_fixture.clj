@@ -3,11 +3,11 @@
     [clj-test-containers.core :as tc]
     [migratus.core :as migratus]
     [next.jdbc :as jdbc]
-    [xiana.config.core :as config]
-    [xiana.db.core :as db-core]
-    [xiana.route.core :as routes]
-    [xiana.session.core :as session-backend]
-    [xiana.webserver.core :as ws]))
+    [xiana.config :as config]
+    [xiana.db :as db-core]
+    [xiana.route :as routes]
+    [xiana.session :as session-backend]
+    [xiana.webserver :as ws]))
 
 (defn system
   [config]
