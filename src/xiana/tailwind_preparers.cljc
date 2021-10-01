@@ -1,4 +1,4 @@
-(ns xiana.app.view.css.tailwind.preparers
+(ns xiana.tailwind-preparers
   (:refer-clojure :exclude [bases])
   (:require
     [com.wsscode.tailwind-garden.components.accessibility :as accessibility]
@@ -19,7 +19,7 @@
     [com.wsscode.tailwind-garden.components.transitions :as transitions]
     [com.wsscode.tailwind-garden.components.typography :as typography]
     [com.wsscode.tailwind-garden.expanders :as exp]
-    [xiana.app.view.css.tailwind.helpers :as hlp]))
+    [xiana.tailwind-helpers :as hlp]))
 
 (defn layout'
   []

@@ -4,9 +4,9 @@
     [clojure.set :as st]
     [garden.core :as garden]
     [garden.stylesheet]
-    [xiana.app.view.css.tailwind.helpers :as hlp]
-    [xiana.app.view.css.tailwind.preparers :as prep]
-    [xiana.app.view.css.tailwind.resolvers :as rlv]))
+    [xiana.tailwind-helpers :as hlp]
+    [xiana.tailwind-preparers :as prep]
+    [xiana.tailwind-resolvers :as rlv]))
 
 (defn result-css-map
   [user-col]

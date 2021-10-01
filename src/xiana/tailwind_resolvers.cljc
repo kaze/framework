@@ -1,9 +1,9 @@
-(ns xiana.app.view.css.tailwind.resolvers
+(ns xiana.tailwind-resolvers
   (:require
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.connect.operation :as pco]
     [com.wsscode.pathom3.interface.smart-map :as psm]
-    [xiana.app.view.css.tailwind.preparers :as prep]))
+    [xiana.tailwind-preparers :as prep]))
 
 (pco/defresolver get-bases []
                  {:bases (prep/generate-base-components-no-mqueries @prep/css-db)})
