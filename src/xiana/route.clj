@@ -2,11 +2,30 @@
   (:require
     [reitit.core :as r]
     [xiana.commons :refer [?assoc-in]]
-    [xiana.core :as xiana]
-    [xiana.route.helpers :as helpers]))
+    [xiana.core :as xiana]))
 
 ;; routes reference
 (defonce -routes (atom []))
+
+(defn not-found
+  "Default not-found response handler helper."
+  [state]
+  (xiana/error
+    (-> state
+        (assoc :response {:status 404 :body "Not Found"}))))
+
+(defn default-action
+  "Default action response handler helper."
+  [{request :request {handler :handler} :request-data :as state}]
+  (try
+    (xiana/ok
+      (assoc state :response (handler request)))
+    (catch Exception e
+      (xiana/error
+        (-> state
+            (assoc :error e)
+            (assoc :response
+                   {:status 500 :body "Internal Server error"}))))))
 
 (defn reset
   "Update routes."
@@ -38,8 +57,8 @@
           (assoc-in [:request-data :action]
                     (or action
                         (if handler
-                          helpers/action
-                          helpers/not-found)))))))
+                          default-action
+                          not-found)))))))
 
 (defn match
   "Associate router match template data into the state.

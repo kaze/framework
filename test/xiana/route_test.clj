@@ -3,7 +3,6 @@
     [clojure.test :refer [deftest is]]
     [xiana.core :as xiana]
     [xiana.route :as route]
-    [xiana.route.helpers :as helpers]
     [xiana.state :as state]))
 
 (def sample-request
@@ -23,6 +22,16 @@
 (def sample-routes-without-action
   "Sample routes structure (without action or handler)."
   [["/" {}]])
+
+(defn test-handler
+  "Sample test handler function for the tests."
+  [_]
+  {:status 200 :body "Ok"})
+
+(def test-state
+  "Sample test state."
+  {:request {}
+   :request-data {:handler test-handler}})
 
 ;; test reset routes functionality
 (deftest contains-sample-routes
@@ -62,7 +71,7 @@
                    (:request-data)
                    (:action))
         ;; expected action
-        expected helpers/not-found]
+        expected route/not-found]
     ;; verify if action has the expected value
     (is (= action expected))))
 
@@ -77,7 +86,7 @@
                    (:request-data)
                    (:action))
         ;; expected action
-        expected helpers/action]
+        expected route/default-action]
     ;; verify if action has the expected value
     (is (= action expected))))
 
@@ -92,6 +101,30 @@
                    (:request-data)
                    (:action))
         ;; expected action? TODO: research
-        expected helpers/not-found]
+        expected route/not-found]
     ;; verify if action has the expected value
     (is (= action expected))))
+
+;; test default not-found handler response
+(deftest contains-not-found-response
+  (let [response (:response (xiana/extract
+                              (route/not-found {})))
+        expected {:status 404, :body "Not Found"}]
+    ;; verify if the response and expected value are equal
+    (is (= response expected))))
+
+;; test default action handler: error response
+(deftest contains-action-error-response
+  (let [response (:response (xiana/extract
+                              (route/default-action {})))
+        expected {:status 500 :body "Internal Server error"}]
+    ;; verify if the response and expected value are equal
+    (is (= response expected))))
+
+;; test default action handler: ok response
+(deftest contains-action-ok-response
+  (let [response (:response (xiana/extract
+                              (route/default-action test-state)))
+        expected {:status 200, :body "Ok"}]
+    ;; verify if the response and expected value are equal
+    (is (= response expected))))
