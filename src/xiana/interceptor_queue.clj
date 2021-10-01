@@ -1,4 +1,4 @@
-(ns xiana.interceptor.queue
+(ns xiana.interceptor-queue
   (:require
     [xiana.core :as xiana]))
 

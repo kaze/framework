@@ -1,8 +1,8 @@
-(ns xiana.interceptor.wrap-test
+(ns xiana.interceptor-wrap-test
   (:require
     [clojure.test :refer [deftest function? is]]
     [muuntaja.middleware :as middleware]
-    [xiana.interceptor.wrap :as wrap])
+    [xiana.interceptor-wrapper :as wrap])
   (:import
     (java.io
       ByteArrayInputStream)))

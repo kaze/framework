@@ -3,7 +3,7 @@
     [ring.adapter.jetty :as jetty]
     [xiana.config :as config]
     [xiana.core :as xiana]
-    [xiana.interceptor.queue :as interceptor.queue]
+    [xiana.interceptor-queue :as interceptor.queue]
     [xiana.route :as route]
     [xiana.state :as state]))
 

@@ -1,4 +1,4 @@
-(ns xiana.interceptor.wrap
+(ns xiana.interceptor-wrapper
   (:require
     [xiana.core :as xiana]))
 
