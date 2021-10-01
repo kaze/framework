@@ -21,3 +21,7 @@
         expected   "<?xml version=\"1.0\" encoding=\"UTF-8\"?><note>anything</note>"]
     ;; verify if response is equal to the expected
     (is (= XLM-string expected))))
+
+(deftest contains-muuntaja-interceptor
+  (let [interceptor (muuntaja/interceptor)]
+    (is (not (empty? interceptor)))))

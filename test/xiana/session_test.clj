@@ -1,7 +1,8 @@
 (ns xiana.session-test
   (:require
     [clojure.test :refer [deftest is]]
-    [xiana.session :as session])
+    [xiana.session :as session]
+    [xiana.test-helper :as th])
   (:import
     (java.util
       UUID)))
@@ -38,3 +39,70 @@
     (is (= {:id session-id} (session/fetch session-instance :session-id)))
     ;; erase and verify if session instance is empty
     (is (empty? (session/erase! session-instance)))))
+
+(def simple-request
+  "Simple/minimal request example."
+  {:uri "/" :request-method :get})
+
+(def sample-session-id
+  "Sample session id."
+  "21f0d6e6-3782-465a-b903-ca84f6f581a0")
+
+(def sample-authorization
+  "Sample authorization data."
+  "auth")
+
+(def sample-request
+  "Sample request example."
+  {:uri "/"
+   ;; method example: GET
+   :request-method :get
+   ;; header example with session id and authorization
+   :headers {:session-id sample-session-id
+             :authorization sample-authorization}})
+
+(def sample-state
+  "State with the sample request."
+  {:request sample-request})
+
+(def simple-state
+  "State with the simple/minimal request."
+  {:request simple-request})
+
+(def session-user-role
+  "Instance of the session user role interceptor."
+  (session/user-role-interceptor))
+
+(deftest contains-session-user-role
+  ;; compute a single interceptor semi cycle (enter-leave-enter)
+  (let [sample-resp (th/fetch-execute sample-state session-user-role :enter)
+        simple-resp (th/fetch-execute simple-state session-user-role :enter)]
+    ;; verify if has the user and the right authorization strings
+    (is (and (= (get-in sample-resp [:session-data :user :role]) :guest)
+             (= (get-in sample-resp [:session-data :authorization]) "auth")))
+    ;; verify if has the user and the right authorization is nil
+    (is (and (= (get-in simple-resp [:session-data :user :role]) :guest)
+             (nil? (get-in simple-resp [:session-data :authorization]))))))
+
+(def session-user-id
+  "Instance of the session user id interceptor."
+  (session/user-id-interceptor))
+
+;; test if the session-user-id handles new sessions
+(deftest contains-new-session
+  (let [session-data (-> {}
+                         (th/fetch-execute session-user-id :enter)
+                         (:session-data))]
+    ;; verify if session-id was registered
+    (is (= (:new-session session-data) true))))
+
+(deftest persiste-session-id
+  ;; compute a single interceptor semi cycle (enter-leave-enter)
+  (let [enter-resp (th/fetch-execute sample-state session-user-id :enter)
+        leave-resp (th/fetch-execute enter-resp session-user-id :leave)
+        header     (get-in leave-resp [:response :headers])
+        new-state  (assoc-in sample-state [:request :headers] header)
+        last-resp  (th/fetch-execute new-state session-user-id :enter)]
+    ;; verify if the uuid strings are equal
+    (is (= (get-in last-resp [:request :headers :session-id])
+           (.toString (get-in last-resp [:session-data :session-id]))))))
