@@ -1,4 +1,4 @@
-(ns xiana.db.migrations.core
+(ns xiana.migrations
   (:require
     [clojure.java.io :as io]
     [clojure.string :as string]
@@ -70,6 +70,13 @@
                                                                  :db]
                                                             postgresql)]
     mig-cfg))
+
+(defn get-migrations-folder-path
+  [config]
+  (-> (migrations/find-or-create-migration-dir
+        (utils/get-parent-migration-dir config)
+        (utils/get-migration-dir config))
+      (.getAbsolutePath)))
 
 (defn migrate
   [env]
