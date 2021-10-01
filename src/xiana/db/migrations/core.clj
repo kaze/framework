@@ -7,6 +7,8 @@
     [migratus.protocols :as proto]
     [migratus.utils :as utils])
   (:import
+    (java.io
+      File)
     java.text.SimpleDateFormat
     (java.util
       Date
@@ -19,7 +21,7 @@
   "(ns %s\n  (:require [xiana.db.sql :as sql]))")
 
 (def migrations-folder-path
-  (-> (java.io.File. "src/xiana/db/migration_files") .getAbsolutePath))
+  (-> (File. "src/xiana/db/migration_files") .getAbsolutePath))
 
 (defn create-clojure-file
   [fpath ^String namespace]

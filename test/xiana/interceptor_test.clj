@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer [deftest is]]
     [xiana.core :as xiana]
+    [xiana.db :as db]
     [xiana.interceptor :as interceptor]))
 
 (def sample-session-id
@@ -109,7 +110,7 @@
 ;    (is (= expected response-data))))
 
 (deftest contains-sql-empty-result
-  (let [result (fetch-execute {} interceptor/db-access :leave)
+  (let [result (fetch-execute {} db/interceptor :leave)
         ;; expected value
         expected {}]
     ;; expected response data value?
