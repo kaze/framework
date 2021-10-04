@@ -15,12 +15,9 @@
         deps {:webserver               (:xiana.app/web-server config)
               :routes                  (routes/reset (:routes config))
               :role-set                (:role-set config)
-              :auth                    (:xiana.app/auth config)
               :session-backend         session-backend
               :router-interceptors     (:router-interceptors config)
-              :controller-interceptors (:controller-interceptors config)
-              :db                      (db-core/start
-                                         (:database-connection config))}]
+              :controller-interceptors (:controller-interceptors config)}]
     (assoc deps :web-server (ws/start deps))))
 
 (defn docker-postgres!
@@ -53,7 +50,7 @@
 (defn std-system-fixture
   [config f]
   (try
-    (-> (config/load-config config)
+    (-> (config/load-config! config)
         docker-postgres!
         (assoc-in [:xiana.app/web-server :port] 3333)
         migrate!

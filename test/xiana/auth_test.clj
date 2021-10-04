@@ -21,12 +21,12 @@
 
 (deftest testing-different-algorithms
   (testing "bcrypt"
-    (config/load-config {:xiana.app/auth {:hash-algorithm :bcrypt}})
+    (config/load-config! {:xiana.app/auth {:hash-algorithm :bcrypt}})
     (testing-mistake)
     (testing-ok))
 
   (testing ":scrypt"
-    (config/load-config {:xiana.app/auth {:hash-algorithm :scrypt}})
+    (config/load-config! {:xiana.app/auth {:hash-algorithm :scrypt}})
     (testing-mistake)
     (testing-ok))
 
@@ -35,7 +35,7 @@
     (testing-ok))
 
   (testing "not supported hash algorithm"
-    (config/load-config {:xiana.app/auth {:hash-algorithm :argon2}})
+    (config/load-config! {:xiana.app/auth {:hash-algorithm :argon2}})
     (is (thrown? ExceptionInfo #"Not supported hashing algorithm found"
                  {:hash-algorithm :argon2}
                  (auth/make password)))))

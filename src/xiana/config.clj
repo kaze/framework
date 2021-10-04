@@ -9,9 +9,6 @@
 
 (defonce -config (atom nil))
 
-;; set configuration environment variable name
-(def env-edn-file :xiana_edn_config)
-
 (defn app-keyword
   [k]
   (keyword "xiana.app" (name k)))
@@ -23,10 +20,10 @@
     (with-open [r (io/reader edn-file)]
       (edn/read (PushbackReader. r)))))
 
-(defn load-config
+(defn load-config!
   "Loads configuration from environment variables, config edn file, and passed parameter map"
   ([]
-   (load-config {}))
+   (load-config! {}))
   ([args]
    (let [c (merge env args)]
      (reset! -config
@@ -37,5 +34,5 @@
 (defn get-spec
   "Select configuration spec using 'k' identifier."
   [k]
-  (when (nil? @-config) (load-config))
+  (when (nil? @-config) (load-config!))
   (get @-config k (get @-config (app-keyword k))))

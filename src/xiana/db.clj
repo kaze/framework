@@ -45,19 +45,21 @@
   [honeysql.core
    call])
 
+(defonce -datasource (atom nil))
+
 (defn start
   "Start database instance.
   Get the database specification from
   the 'edn' configuration file in case of
   db-spec isn't set."
-  ([] (start nil))
-  ([db-spec]
-   (when-let [spec (or db-spec (config/get-spec :database))]
-     {:datasource (jdbc/get-datasource spec)})))
+  []
+  (reset! -datasource
+          (or (config/get-spec :database-connection)
+              (jdbc/get-datasource (config/get-spec :postgresql)))))
 
 (defmulti build-clause
   "Create build clause multimethod with associated
-          dispatch function: (honeysql-postgres.helpers args)."
+                  dispatch function: (honeysql-postgres.helpers args)."
   (fn [optype dbtype _args] [dbtype optype]))
 
 (defmethod build-clause [:default :create-table]
@@ -84,8 +86,10 @@
   "Get connection, parse the given sql-map (query) and
   execute it using `jdbc/execute!`.
   If some error/exceptions occurs returns an empty map."
-  [datasource sql-map]
-  (with-open [connection (.getConnection datasource)]
+  [sql-map]
+  (with-open [connection (if @-datasource
+                           (.getConnection @-datasource)
+                           (.getConnection (start)))]
     (let [sql-params (->sql-params sql-map)]
       (jdbc/execute! connection sql-params {:return-keys true}))))
 
@@ -116,7 +120,7 @@
 (def interceptor
   "Database access interceptor.
   Enter: nil.
-  Leave: Fetch and execute a given query using the chosen database
+  Leave: Fetch and execute a given query using the database
   driver, if succeeds associate its results into state response data.
   Remember the entry query must be a sql-map, e.g:
   {:select [:*] :from [:users]}."
@@ -126,7 +130,5 @@
        (if query
          (assoc-in state
                    [:response-data :db-data]
-                   ;; returns the result of the database-query
-                   ;; execution or empty ({})
-                   (execute (get-in state [:deps :db :datasource]) query))
+                   (execute query))
          state)))})
