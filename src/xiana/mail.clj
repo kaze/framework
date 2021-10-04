@@ -1,7 +1,8 @@
 (ns xiana.mail
   (:require
     [cuerdas.core :as cu]
-    [postal.core :as pc]))
+    [postal.core :as pc]
+    [xiana.config :as config]))
 
 (defn- make-body
   [body atts]
@@ -15,12 +16,12 @@
     (vec (concat body-payload (map file-map attachments)))))
 
 (defn send-email!
-  [{mail-config :xiana.app/emails}
-   {:keys [to cc bcc subject body attachments]}]
-  (pc/send-message mail-config
-                   {:from (:from mail-config)
-                    :to to
-                    :cc cc
-                    :bcc bcc
-                    :subject subject
-                    :body (make-body body attachments)}))
+  [{:keys [to cc bcc subject body attachments]}]
+  (let [mail-config (config/get-spec :emails)]
+    (pc/send-message mail-config
+                     {:from (:from mail-config)
+                      :to to
+                      :cc cc
+                      :bcc bcc
+                      :subject subject
+                      :body (make-body body attachments)})))
