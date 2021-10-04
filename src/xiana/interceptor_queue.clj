@@ -46,11 +46,11 @@
 (defn execute
   "Execute the interceptors queue and invoke the
   action procedure between its enter-leave stacks."
-  [state default-interceptors]
+  [ctx default-interceptors]
   (let [interceptors (-concat
-                       (get-in state [:request-data :interceptors])
+                       (get-in ctx [:request-data :interceptors])
                        default-interceptors)
-        action (vector (get-in state [:request-data :action]))]
+        action (vector (get-in ctx [:request-data :action]))]
     ;; execute the interceptors queue calling the action
     ;; between its enter/leave stacks
-    (-execute state interceptors action)))
+    (-execute ctx interceptors action)))

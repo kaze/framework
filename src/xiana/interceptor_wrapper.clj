@@ -1,20 +1,20 @@
 (ns xiana.interceptor-wrapper
   (:require
-    [xiana.core :as xiana]))
+    [xiana.core :refer [ok error]]))
 
 (defn interceptor
   "Interceptor wrapper to use xiana monad."
   [in]
   (cond-> {}
-    (:enter in) (assoc :enter (fn [state] (xiana/ok ((:enter in) state))))
-    (:leave in) (assoc :leave (fn [state] (xiana/ok ((:leave in) state))))
-    (:error in) (assoc :error (fn [state] (xiana/error ((:error in) state))))))
+    (:enter in) (assoc :enter (fn [ctx] (ok ((:enter in) ctx))))
+    (:leave in) (assoc :leave (fn [ctx] (ok ((:leave in) ctx))))
+    (:error in) (assoc :error (fn [ctx] (error ((:error in) ctx))))))
 
 (defn- middleware-fn
   "Simple enter/leave middleware function generator."
   [m k]
-  (fn [{r k :as state}]
-    (xiana/ok (-> state (assoc k (m r))))))
+  (fn [{r k :as ctx}]
+    (ok (-> ctx (assoc k (m r))))))
 
 (defn middleware->enter
   "Parse middleware function to interceptor enter lambda function."
