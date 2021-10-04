@@ -1,35 +1,40 @@
 (ns xiana.auth-test
   (:require
     [clojure.test :refer [deftest is]]
-    [xiana.auth :as auth]))
+    [xiana.auth :as auth]
+    [xiana.config :as config])
+  (:import
+    (clojure.lang
+      ExceptionInfo)))
 
 (def password "myPersonalPassword!")
 
 (defn testing-ok
-  [settings]
-  (let [encrypted (auth/make settings password)]
-    (is (true? (auth/check settings password encrypted)))))
+  []
+  (let [encrypted (auth/make password)]
+    (is (true? (auth/check password encrypted)))))
 
 (defn testing-mistake
-  [settings]
-  (let [encrypted (auth/make settings password)]
-    (is (false? (auth/check settings "myWrongPassword!" encrypted)))))
+  []
+  (let [encrypted (auth/make password)]
+    (is (false? (auth/check "myWrongPassword!" encrypted)))))
 
 (deftest test-full-functionality-bcrypt
-  (let [fragment {:deps {:auth {:hash-algorithm :bcrypt}}}]
-    (testing-mistake fragment)
-    (testing-ok fragment)))
+  (config/load-config {:xiana.app/auth {:hash-algorithm :bcrypt}})
+  (testing-mistake)
+  (testing-ok))
 
 (deftest test-full-functionality-script
-  (let [fragment {:deps {:auth {:hash-algorithm :scrypt}}}]
-    (testing-mistake fragment)
-    (testing-ok fragment)))
+  (config/load-config {:xiana.app/auth {:hash-algorithm :scrypt}})
+  (testing-mistake)
+  (testing-ok))
 
 (deftest test-full-functionality-pbkdf2
-  (let [fragment {:deps {:auth {:hash-algorithm :pbkdf2}}}]
-    (testing-mistake fragment)
-    (testing-ok fragment)))
+  (testing-mistake)
+  (testing-ok))
 
-(deftest test-assert-functionality
-  (let [fragment {:deps {:auth {:hash-algorithm :argon2}}}]
-    (is (thrown? java.lang.AssertionError (auth/make fragment password)))))
+(deftest test-not-supported-hash-algorithm
+  (config/load-config {:xiana.app/auth {:hash-algorithm :argon2}})
+  (is (thrown? ExceptionInfo #"Not supported hashing algorithm found"
+               {:hash-algorithm :argon2}
+               (auth/make password))))
