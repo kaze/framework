@@ -46,7 +46,7 @@
 (defn migrate!
   [config]
   (let [db (:database-connection config)
-        mig-config (assoc (:xiana.db.storage/migration config) :db db)]
+        mig-config (assoc (:xiana.app/migration config) :db db)]
     (migratus/migrate mig-config))
   config)
 

@@ -45,9 +45,9 @@
 
 (defn migratus-create
   [env name]
-  (let [migration-dir  (migrations/find-or-create-migration-dir
-                         (utils/get-parent-migration-dir env)
-                         (utils/get-migration-dir env))
+  (let [migration-dir (migrations/find-or-create-migration-dir
+                        (utils/get-parent-migration-dir env)
+                        (utils/get-migration-dir env))
         migration-name (migrations/->kebab-case (str (timestamp) name))]
     (doseq [mig-file (proto/migration-files* :edn migration-name)]
       (.createNewFile (io/file migration-dir mig-file)))
@@ -56,19 +56,19 @@
 (defn create
   [env name]
   (let [[migration-name migration-dir] (migratus-create env name)
-        filename                       (string/replace migration-name #"-" "_")
-        absolute-path                  (str migrations-folder-path "/" filename ".clj")
-        namespace                      (str "xiana.db.migration-files." migration-name)
-        namespace-content              (format content-clojure-file namespace)]
+        filename (string/replace migration-name #"-" "_")
+        absolute-path (str migrations-folder-path "/" filename ".clj")
+        namespace (str "xiana.db.migration-files." migration-name)
+        namespace-content (format content-clojure-file namespace)]
     (create-clojure-file absolute-path namespace-content)
     (insert-content-migratus-file migration-dir migration-name namespace)))
 
 (defn migration-cfg
   [env]
-  (let [{:xiana.db.storage/keys [postgresql]} env
-        mig-cfg                                   (assoc-in env [:xiana.db.storage/migration
-                                                                 :db]
-                                                            postgresql)]
+  (let [{:xiana.app/keys [postgresql]} env
+        mig-cfg (assoc-in env [:xiana.app/migration
+                               :db]
+                          postgresql)]
     mig-cfg))
 
 (defn get-migrations-folder-path
@@ -80,9 +80,9 @@
 
 (defn migrate
   [env]
-  (->  env
-       migration-cfg
-       migratus/migrate))
+  (-> env
+      migration-cfg
+      migratus/migrate))
 
 (defn rollback-last
   [env]

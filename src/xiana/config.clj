@@ -8,6 +8,8 @@
       File
       PushbackReader)))
 
+(defonce -config (atom nil))
+
 ;; set configuration environment variable name
 (def env-edn-file "XIANA_EDN_CONFIG")
 
@@ -22,8 +24,8 @@
    :auth      :xiana.app/auth
    :emails    :xiana.app/emails
    :webserver :xiana.app/web-server
-   :migration :xiana.db.storage/migration
-   :database  :xiana.db.storage/postgresql})
+   :migration :xiana.app/migration
+   :database  :xiana.app/postgresql})
 
 (defn read-edn-file
   "Read edn configuration file."
@@ -43,3 +45,7 @@
 (defn env
   []
   (load-env))
+
+(defn config
+  [k]
+  k)

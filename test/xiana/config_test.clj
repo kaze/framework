@@ -18,8 +18,8 @@
 (deftest default-keys-are-present
   (is (not (= (and
                 (:xiana.app/web-server config-map)
-                (:xiana.db.storage/postgresql config-map)
-                (:xiana.db.storage/migration config-map)
+                (:xiana.app/postgresql config-map)
+                (:xiana.app/migration config-map)
                 (:xiana.app/emails config-map)
                 (:xiana.app/auth config-map))
               nil))))
