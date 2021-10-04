@@ -2,50 +2,40 @@
   (:require
     [clojure.edn :as edn]
     [clojure.java.io :as io]
-    [config.core :refer [load-env]])
+    [config.core :refer [env]])
   (:import
     (java.io
-      File
       PushbackReader)))
 
 (defonce -config (atom nil))
 
 ;; set configuration environment variable name
-(def env-edn-file "XIANA_EDN_CONFIG")
+(def env-edn-file :xiana_edn_config)
 
-;; set default edn file
-(def default-edn-file
-  (when-let [edn-file (System/getenv env-edn-file)]
-    (.getAbsolutePath (File. edn-file))))
-
-;; default config map: util wrapper/translator
-(def default-config-map
-  {:acl       :xiana.app/acl
-   :auth      :xiana.app/auth
-   :emails    :xiana.app/emails
-   :webserver :xiana.app/web-server
-   :migration :xiana.app/migration
-   :database  :xiana.app/postgresql})
+(defn app-keyword
+  [k]
+  (keyword "xiana.app" (name k)))
 
 (defn read-edn-file
   "Read edn configuration file."
   [edn-file]
-  (if edn-file (let [edn-file (or edn-file default-edn-file)]
-                 (with-open [r (io/reader edn-file)]
-                   (edn/read (PushbackReader. r))))
-      (load-env)))
+  (when edn-file
+    (with-open [r (io/reader edn-file)]
+      (edn/read (PushbackReader. r)))))
+
+(defn load-config
+  "Loads configuration from environment variables, config edn file, and passed parameter map"
+  ([]
+   (load-config {}))
+  ([args]
+   (let [c (merge env args)]
+     (reset! -config
+             (merge env
+                    (read-edn-file (:xiana_edn_config c))
+                    args)))))
 
 (defn get-spec
   "Select configuration spec using 'k' identifier."
-  ([k] (get-spec k nil))
-  ([k edn-file]
-   (get (read-edn-file edn-file)
-        (-> k default-config-map))))
-
-(defn env
-  []
-  (load-env))
-
-(defn config
   [k]
-  k)
+  (when (nil? @-config) (load-config))
+  (get @-config k (get @-config (app-keyword k))))

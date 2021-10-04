@@ -3,7 +3,7 @@
     [clojure.test :refer [deftest is]]
     [xiana.config :as config]))
 
-(def config-map (config/read-edn-file nil))
+(def config-map (config/load-config))
 
 ;; test if the configuration map is not empty
 (deftest config-map-not-empty
@@ -36,3 +36,16 @@
                      (:port web-server-map)
                      (:join? web-server-map))
                 nil)))))
+
+(deftest apply-argument
+  (config/load-config {:xiana_edn_config "test/resources/xiana_test.edn"})
+  (is (= "test/resources/xiana_test.edn" (config/get-spec :xiana_edn_config)))
+  (is (= "This is a test text" (config/get-spec :test-data))))
+
+(deftest same-result-for-keys-provided-with-name-space
+  (config/load-config {:xiana.app/test-data "This is a test text"
+                       :test-data-2 "Second test data"})
+  (is (= "This is a test text" (config/get-spec :test-data)))
+  (is (= "This is a test text" (config/get-spec :xiana.app/test-data)))
+  (is (= "Second test data" (config/get-spec :test-data-2)))
+  (is (nil? (config/get-spec :xiana.app/test-data-2))))

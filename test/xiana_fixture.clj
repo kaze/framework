@@ -53,8 +53,7 @@
 (defn std-system-fixture
   [config f]
   (try
-    (-> (config/env)
-        (merge config)
+    (-> (config/load-config config)
         docker-postgres!
         (assoc-in [:xiana.app/web-server :port] 3333)
         migrate!
