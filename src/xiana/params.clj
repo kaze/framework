@@ -14,8 +14,8 @@
 
   Enter: TODO.
   Leave: nil."
-  {:enter (fn [state]
+  {:enter (fn [ctx]
             (let [f #(keywordize-keys
                        ((middleware.params/wrap-params identity) %))]
               (xiana/ok
-                (update state :request f))))})
+                (update ctx :request f))))})

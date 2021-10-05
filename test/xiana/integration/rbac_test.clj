@@ -5,6 +5,7 @@
     [honeysql.helpers :as sql]
     [tiny-rbac.builder :as b]
     [xiana-fixture :as fixture]
+    [xiana.config :as config]
     [xiana.core :as xiana]
     [xiana.rbac :as rbac]
     [xiana.session :as session]

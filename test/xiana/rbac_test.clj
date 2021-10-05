@@ -3,8 +3,9 @@
     [clojure.test :refer [deftest is]]
     [honeysql.helpers :as sql]
     [tiny-rbac.builder :as b]
+    [xiana.config :as config]
     [xiana.core :as xiana]
-    [xiana.rbac :refer [interceptor]]
+    [xiana.rbac :refer [interceptor reset-role-set!]]
     [xiana.session :as session])
   (:import
     (java.util
@@ -38,10 +39,10 @@
   (let [session-id (str (UUID/randomUUID))
         session-backend (session/init-in-memory)]
     (session/add! session-backend session-id user)
+    (config/load-config! {:role-set role-set})
     (-> (assoc-in {} [:request-data :permission] permission)
         (assoc-in [:request :headers "session-id"] session-id)
-        (assoc-in [:deps :session-backend] session-backend)
-        (assoc-in [:deps :role-set] role-set))))
+        (assoc-in [:deps :session-backend] session-backend))))
 
 (deftest user-permissions
   (is (= #{:image/all}
