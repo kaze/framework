@@ -106,3 +106,20 @@
     ;; verify if the uuid strings are equal
     (is (= (get-in last-resp [:request :headers :session-id])
            (.toString (get-in last-resp [:session-data :session-id]))))))
+
+(deftest on-demand-session-protocol-add!-dump-delete!-erase!
+  (let [user-id (UUID/randomUUID)
+        session-id (UUID/randomUUID)]
+    ;; add session instance values
+    (session/add! session/on-demand :user-id {:id user-id})
+    (session/add! session/on-demand :session-id {:id session-id})
+    ;; verify if the values exists
+    (is (= {:id user-id} (session/fetch session/on-demand :user-id)))
+    (is (= {:id session-id} (session/fetch session/on-demand :session-id)))
+    (is (= {:session-id {:id session-id}
+            :user-id    {:id user-id}}
+           (session/dump session/on-demand)))
+    (is (= {:user-id {:id user-id}}
+           (session/delete! session/on-demand :session-id)))
+    ;; erase and verify if session instance is empty
+    (is (empty? (session/erase! session/on-demand)))))

@@ -38,6 +38,26 @@
      ;; erase session
      (erase! [_] (reset! m {})))))
 
+(defonce ^:private -on-demand (atom nil))
+
+(def on-demand
+  "Initialize session in memory."
+  ;; implement the Session protocol
+  (reify Session
+    ;; fetch session key:element
+    (fetch [_ k] (get @-on-demand k))
+    ;; fetch all elements (no side effect)
+    (dump [_] @-on-demand)
+    ;; add session key:element
+    (add!
+      [_ k v]
+      (let [k (or k (UUID/randomUUID))]
+        (swap! -on-demand assoc k v)))
+    ;; delete session key:element
+    (delete! [_ k] (swap! -on-demand dissoc k))
+    ;; erase session
+    (erase! [_] (reset! -on-demand nil))))
+
 (defn interceptor
   "Session interceptor."
   ([] (interceptor (init-in-memory)))
