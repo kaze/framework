@@ -47,16 +47,6 @@
 
 (defonce -datasource (atom nil))
 
-(defn start
-  "Start database instance.
-  Get the database specification from
-  the 'edn' configuration file in case of
-  db-spec isn't set."
-  []
-  (reset! -datasource
-          (or (config/get-spec :database-connection)
-              (jdbc/get-datasource (config/get-spec :postgresql)))))
-
 (defmulti build-clause
   "Create build clause multimethod with associated
                   dispatch function: (honeysql-postgres.helpers args)."
@@ -72,26 +62,6 @@
   [_ _ args]
   (let [{:keys [map rows]} args]
     (helpers/with-columns map rows)))
-
-(defn ->sql-params
-  "Parse sql-map using honeysql format function with pre-defined
-  options that target postgresql."
-  [sql-map]
-  (sql/format sql-map
-              {:quoting            :ansi
-               :parameterizer      :postgresql
-               :return-param-names false}))
-
-(defn execute
-  "Get connection, parse the given sql-map (query) and
-  execute it using `jdbc/execute!`.
-  If some error/exceptions occurs returns an empty map."
-  [sql-map]
-  (with-open [connection (if @-datasource
-                           (.getConnection @-datasource)
-                           (.getConnection (start)))]
-    (let [sql-params (->sql-params sql-map)]
-      (jdbc/execute! connection sql-params {:return-keys true}))))
 
 (defn create-table
   "Create table specified by its name on the database."
@@ -116,6 +86,31 @@
   [m rows]
   (let [args {:map m :rows rows}]
     (build-clause :with-columns :default args)))
+
+(defn connection
+  "Get or start database connection."
+  []
+  (.getConnection (or @-datasource
+                      (reset! -datasource
+                              (jdbc/get-datasource (config/get-spec :postgresql))))))
+
+(defn ->sql-params
+  "Parse sql-map using honeysql format function with pre-defined
+  options that target postgresql."
+  [sql-map]
+  (sql/format sql-map
+              {:quoting            :ansi
+               :parameterizer      :postgresql
+               :return-param-names false}))
+
+(defn execute
+  "Get connection, parse the given sql-map (query) and
+  execute it using `jdbc/execute!`.
+  If some error/exceptions occurs returns an empty map."
+  [sql-map]
+  (with-open [connection (connection)]
+    (let [sql-params (->sql-params sql-map)]
+      (jdbc/execute! connection sql-params {:return-keys true}))))
 
 (def interceptor
   "Database access interceptor.

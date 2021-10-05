@@ -1,5 +1,5 @@
 {:xiana.app/postgresql {:port     5432
-                        :dbname   "xiana"
+                        :dbname   "xiana_test"
                         :host     "localhost"
                         :dbtype   "postgresql"
                         :user     "postgres"

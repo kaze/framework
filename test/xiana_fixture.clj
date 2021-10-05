@@ -21,31 +21,25 @@
     (assoc deps :web-server (ws/start deps))))
 
 (defn docker-postgres!
-  [config]
+  [cfg]
   (let [container (-> (tc/create {:image-name    "postgres:11.5-alpine"
+                                  :env-vars {"POSTGRES_DB" "xiana_test"}
                                   :exposed-ports [5432]})
                       (tc/start!))
         port (get (:mapped-ports container) 5432)
-
-        db-config (-> config
-                      :database-connection
+        db-config (-> (config/get-spec :postgresql)
                       (assoc
                         :port port
-                        :dbtype "postgresql"
-                        :dbname "xiana_test"
                         :embedded container
-                        :user "postgres"
                         :subname (str "//localhost:" port "/frankie")))]
-    (jdbc/execute! (dissoc db-config :dbname) ["CREATE DATABASE xiana_test;"])
-    (jdbc/execute! db-config ["GRANT ALL PRIVILEGES ON DATABASE xiana_test TO postgres;"])
-    (assoc config :database-connection db-config)))
+    (assoc cfg :postgresql db-config)))
 
 (defn migrate!
-  [config]
-  (let [db (:database-connection config)
-        mig-config (assoc (:xiana.app/migration config) :db db)]
+  [cfg]
+  (let [db (:postgresql cfg)
+        mig-config (assoc (config/get-spec :migration) :db db)]
     (migratus/migrate mig-config))
-  config)
+  cfg)
 
 (defn std-system-fixture
   [config f]
@@ -53,6 +47,7 @@
     (-> (config/load-config! config)
         docker-postgres!
         (assoc-in [:xiana.app/web-server :port] 3333)
+        (config/load-config!)
         migrate!
         system)
     (f)
