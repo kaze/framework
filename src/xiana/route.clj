@@ -2,10 +2,11 @@
   (:require
     [reitit.core :as r]
     [xiana.commons :refer [?assoc-in]]
+    [xiana.config :as config]
     [xiana.core :as xiana]))
 
 ;; routes reference
-(defonce -routes (atom []))
+(defonce -routes (atom nil))
 
 (defn not-found
   "Default not-found response handler helper."
@@ -27,10 +28,11 @@
             (assoc :response
                    {:status 500 :body "Internal Server error"}))))))
 
-(defn reset
+(defn routes
   "Update routes."
-  [routes]
-  (reset! -routes routes))
+  []
+  (or @-routes
+      (reset! -routes (config/get-spec :routes))))
 
 (defmacro -get-in-template
   "Simple macro to get the values from the match template."
@@ -63,6 +65,9 @@
 (defn match
   "Associate router match template data into the state.
   Return the wrapped state container."
-  [{request :request :as state}]
-  (let [match (r/match-by-path (r/router @-routes) (:uri request))]
-    (-update match state)))
+  [{request :request :as ctx}]
+  (let [match (r/match-by-path (r/router (routes)) (:uri request))]
+    (-update match ctx)))
+
+(defn reset-routes! []
+  (reset! -routes nil))

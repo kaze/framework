@@ -1,6 +1,7 @@
 (ns xiana.webserver-test
   (:require
     [clojure.test :refer [deftest function? is]]
+    [xiana.config :as config]
     [xiana.core :as xiana]
     [xiana.route :as route]
     [xiana.webserver :as webserver])
@@ -39,7 +40,8 @@
 ;; test jetty handler function call
 (deftest call-jetty-handler-fn
   ;; set sample routes
-  (route/reset sample-routes)
+  (config/load-config! {:routes sample-routes})
+  (route/reset-routes!)
   ;; set handler function
   (let [f (webserver/handler-fn default-interceptors)]
     ;; verify if it's the right response

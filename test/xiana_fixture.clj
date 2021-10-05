@@ -13,7 +13,7 @@
   [config]
   (let [session-backend (:session-backend config (session-backend/init-in-memory))
         deps {:webserver               (:xiana.app/web-server config)
-              :routes                  (routes/reset (:routes config))
+              :routes                  (:routes config)
               :role-set                (:role-set config)
               :session-backend         session-backend
               :router-interceptors     (:router-interceptors config)
@@ -22,16 +22,16 @@
 
 (defn docker-postgres!
   [cfg]
-  (let [container (-> (tc/create {:image-name    "postgres:11.5-alpine"
-                                  :env-vars {"POSTGRES_DB" "xiana_test"}
+  (let [postgres-cfg (config/get-spec :postgresql)
+        container (-> (tc/create {:image-name    "postgres:11.5-alpine"
+                                  :env-vars      {"POSTGRES_DB" (:dbname postgres-cfg)}
                                   :exposed-ports [5432]})
                       (tc/start!))
         port (get (:mapped-ports container) 5432)
-        db-config (-> (config/get-spec :postgresql)
-                      (assoc
-                        :port port
-                        :embedded container
-                        :subname (str "//localhost:" port "/frankie")))]
+        db-config (assoc postgres-cfg
+                         :port port
+                         :embedded container
+                         :subname (str "//localhost:" port "/frankie"))]
     (assoc cfg :postgresql db-config)))
 
 (defn migrate!

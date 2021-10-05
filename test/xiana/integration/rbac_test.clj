@@ -9,7 +9,8 @@
     [xiana.core :as xiana]
     [xiana.rbac :as rbac]
     [xiana.session :as session]
-    [xiana.webserver :as ws])
+    [xiana.webserver :as ws]
+    [xiana.route :as routes])
   (:import
     (java.util
       UUID)))
@@ -70,6 +71,7 @@
 (deftest delete-request-by-member
   (let [session-id (str (UUID/randomUUID))]
     (session/add! backend session-id member)
+    (routes/reset-routes!)
     (is (= 200 (:status (http/delete "http://localhost:3333/api/image"
                                      {:throw-exceptions false
                                       :headers          {"Session-id" session-id}}))))))
@@ -77,6 +79,7 @@
 (deftest delete-request-by-guest
   (let [session-id (str (UUID/randomUUID))]
     (session/add! backend session-id guest)
+    (routes/reset-routes!)
     (is (= 403 (:status (http/delete "http://localhost:3333/api/image"
                                      {:throw-exceptions false
                                       :headers          {"Session-id" session-id}}))))))
