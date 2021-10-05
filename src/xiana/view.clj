@@ -1,6 +1,6 @@
 (ns xiana.view
   (:require
-    [xiana.core :as xiana]))
+    [xiana.core :refer [ok]]))
 
 (def interceptor
   "View interceptor.
@@ -8,6 +8,6 @@
   Leave: Fetch and execute the state view registered
   procedure, if none was found execute: `xiana/ok`."
   {:leave
-   (fn [{view :view :as state}]
-     (let [f (or view xiana/ok)]
-       (f state)))})
+   (fn [{view :view :as ctx}]
+     (let [f (or view ok)]
+       (f ctx)))})

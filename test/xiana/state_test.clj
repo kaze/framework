@@ -5,13 +5,12 @@
     [xiana.state :as state]))
 
 (def state-initial-map
-  {:deps     {}
-   :request  {}
+  {:request  {}
    :response {}})
 
 ;; test empty state creation
 (deftest initial-state
-  (let [result (state/make {} {})
+  (let [result (state/make {})
         expected (xiana/map->State state-initial-map)]
     ;; verify if the response and expected value are equal
     (is (= result expected))))

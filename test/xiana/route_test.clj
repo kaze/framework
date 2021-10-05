@@ -40,7 +40,7 @@
   (testing "test if sample routes was registered correctly"
     (is (= sample-routes (route/routes))))
   (testing "test route match update request-data (state) functionality"
-    (let [state (-> (state/make {} sample-request)
+    (let [state (-> (state/make sample-request)
                     (route/match)
                     (xiana/extract))
           ;; expected request data
@@ -55,7 +55,7 @@
       ;; is equal to the expected value
       (is (= expected (:request-data state)))))
   (testing "test if the updated request-data (state) data handles the"
-    (let [action (-> (state/make {} sample-not-found-request)
+    (let [action (-> (state/make sample-not-found-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)
@@ -67,7 +67,7 @@
     (config/load-config! {:routes sample-routes-with-handler})
     (route/reset-routes!)
     ;; get action from the updated state/match (micro) flow computation
-    (let [action (-> (state/make {} sample-request)
+    (let [action (-> (state/make sample-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)
@@ -81,7 +81,7 @@
     (config/load-config! {:routes sample-routes-without-action})
     (route/reset-routes!)
     ;; get action from the updated state/match (micro) flow computation
-    (let [action (-> (state/make {} sample-request)
+    (let [action (-> (state/make sample-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)

@@ -4,10 +4,9 @@
 
 (defn make
   "Create an empty state structure."
-  [deps request]
+  [request]
   (->
-    {:deps deps
-     :request  request
+    {:request  request
      :response {}}
-   ;; return a state container
+    ;; return a state container
     xiana/map->State (conj {})))

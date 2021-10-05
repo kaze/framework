@@ -2,21 +2,9 @@
   (:require
     [clj-test-containers.core :as tc]
     [migratus.core :as migratus]
-    [next.jdbc :as jdbc]
+    [xiana.app :as app]
     [xiana.config :as config]
-    [xiana.db :as db-core]
-    [xiana.route :as routes]
-    [xiana.session :as session-backend]
     [xiana.webserver :as ws]))
-
-(defn system
-  [config]
-  (let [deps {:webserver               (:xiana.app/web-server config)
-              :routes                  (:routes config)
-              :role-set                (:role-set config)
-              :router-interceptors     (:router-interceptors config)
-              :controller-interceptors (:controller-interceptors config)}]
-    (assoc deps :web-server (ws/start deps))))
 
 (defn docker-postgres!
   [cfg]
@@ -45,9 +33,8 @@
     (-> (config/load-config! config)
         docker-postgres!
         (assoc-in [:xiana.app/web-server :port] 3333)
-        (config/load-config!)
         migrate!
-        system)
+        app/start)
     (f)
     (finally
       (ws/stop))))

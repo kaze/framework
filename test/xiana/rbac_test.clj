@@ -5,8 +5,7 @@
     [tiny-rbac.builder :as b]
     [xiana.config :as config]
     [xiana.core :as xiana]
-    [xiana.rbac :refer [interceptor reset-role-set!]]
-    [xiana.session :as session])
+    [xiana.rbac :refer [interceptor reset-role-set!]])
   (:import
     (java.util
       UUID)))

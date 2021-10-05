@@ -8,17 +8,16 @@
     [xiana.state :as state]))
 
 ;; web server reference
-(defonce -webserver (atom {}))
+(defonce -webserver (atom nil))
 
-(defn handler-fn
+(def handler-fn
   "Return jetty server handler function."
-  [deps]
   (fn handle*
     ([http-request]
-     (let [state (state/make deps http-request)
-           queue (list #(interceptor.queue/execute % (:router-interceptors deps))
+     (let [state (state/make http-request)
+           queue (list #(interceptor.queue/execute % (config/get-spec :router-interceptors))
                        #(route/match %)
-                       #(interceptor.queue/execute % (:controller-interceptors deps)))]
+                       #(interceptor.queue/execute % (config/get-spec :controller-interceptors)))]
        (-> (xiana/apply-flow-> state queue)
            ;; extract
            (xiana/extract)
@@ -27,26 +26,18 @@
     ([request respond _]
      (respond (handle* request)))))
 
-(defn- make
-  "Web server instance."
-  [options dependencies]
-  {:options options
-   :server  (jetty/run-jetty (handler-fn dependencies) options)})
-
 (defn stop
   "Stop web server."
   []
   ;; stop the server if necessary
-  (when (not (empty? @-webserver))
-    (.stop (get @-webserver :server))))
+  (when @-webserver
+    (.stop @-webserver)))
 
 (defn start
   "Start web server."
-  [dependencies]
+  []
   ;; stop the server
   (stop)
   ;; get server options
-  (when-let [options (merge (config/get-spec :web-server) (:webserver dependencies))]
-    ;; tries to initialize the web-server if we have the
-    ;; server specification (its options)
-    (swap! -webserver merge (make options dependencies))))
+  (let [options (config/get-spec :web-server)]
+    (reset! -webserver (jetty/run-jetty handler-fn options))))

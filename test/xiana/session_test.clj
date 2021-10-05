@@ -58,12 +58,12 @@
    :headers {:session-id sample-session-id
              :authorization sample-authorization}})
 
-(def sample-state
-  "State with the sample request."
+(def sample-ctx
+  "ctx with the sample request."
   {:request sample-request})
 
-(def simple-state
-  "State with the simple/minimal request."
+(def simple-ctx
+  "ctx with the simple/minimal request."
   {:request simple-request})
 
 (def session-user-role
@@ -72,8 +72,8 @@
 
 (deftest contains-session-user-role
   ;; compute a single interceptor semi cycle (enter-leave-enter)
-  (let [sample-resp (th/fetch-execute sample-state session-user-role :enter)
-        simple-resp (th/fetch-execute simple-state session-user-role :enter)]
+  (let [sample-resp (th/fetch-execute sample-ctx session-user-role :enter)
+        simple-resp (th/fetch-execute simple-ctx session-user-role :enter)]
     ;; verify if has the user and the right authorization strings
     (is (and (= (get-in sample-resp [:session-data :user :role]) :guest)
              (= (get-in sample-resp [:session-data :authorization]) "auth")))
@@ -95,11 +95,11 @@
 
 (deftest persiste-session-id
   ;; compute a single interceptor semi cycle (enter-leave-enter)
-  (let [enter-resp (th/fetch-execute sample-state session-user-id :enter)
+  (let [enter-resp (th/fetch-execute sample-ctx session-user-id :enter)
         leave-resp (th/fetch-execute enter-resp session-user-id :leave)
         header     (get-in leave-resp [:response :headers])
-        new-state  (assoc-in sample-state [:request :headers] header)
-        last-resp  (th/fetch-execute new-state session-user-id :enter)]
+        new-ctx  (assoc-in sample-ctx [:request :headers] header)
+        last-resp  (th/fetch-execute new-ctx session-user-id :enter)]
     ;; verify if the uuid strings are equal
     (is (= (get-in last-resp [:request :headers :session-id])
            (.toString (get-in last-resp [:session-data :session-id]))))))
