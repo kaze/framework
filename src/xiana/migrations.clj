@@ -5,7 +5,8 @@
     [migratus.core :as migratus]
     [migratus.migrations :as migrations]
     [migratus.protocols :as proto]
-    [migratus.utils :as utils])
+    [migratus.utils :as utils]
+    [xiana.config :as config])
   (:import
     (java.io
       File)
@@ -64,11 +65,9 @@
     (insert-content-migratus-file migration-dir migration-name namespace)))
 
 (defn migration-cfg
-  [env]
-  (let [{:xiana.app/keys [postgresql]} env
-        mig-cfg (assoc-in env [:xiana.app/migration
-                               :db]
-                          postgresql)]
+  []
+  (let [postgresql (config/get-spec :postgresql)
+        mig-cfg (assoc (config/get-spec :migration) :db postgresql)]
     mig-cfg))
 
 (defn get-migrations-folder-path
@@ -79,19 +78,16 @@
       (.getAbsolutePath)))
 
 (defn migrate
-  [env]
-  (-> env
-      migration-cfg
+  []
+  (-> migration-cfg
       migratus/migrate))
 
 (defn rollback-last
-  [env]
-  (-> env
-      migration-cfg
+  []
+  (-> migration-cfg
       migratus/rollback))
 
 (defn reset
-  [env]
-  (-> env
-      migration-cfg
+  []
+  (-> migration-cfg
       migratus/reset))
