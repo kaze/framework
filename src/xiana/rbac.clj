@@ -3,8 +3,7 @@
     [tiny-rbac.builder :as b]
     [tiny-rbac.core :as c]
     [xiana.config :as config]
-    [xiana.core :as xiana]
-    [xiana.session :as session]))
+    [xiana.core :as xiana]))
 
 (defonce -role-set (atom nil))
 
@@ -20,9 +19,7 @@
 (defn permissions
   [ctx]
   (let [rs (role-set)
-        session-id (get-in ctx [:request :headers "session-id"])
-        session-backend (-> ctx :deps :session-backend)
-        user (session/fetch session-backend session-id)
+        user (:session-data ctx)
         role (:users/role user)
         permit (get-in ctx [:request-data :permission])
         resource (keyword (namespace permit))

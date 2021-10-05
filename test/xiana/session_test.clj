@@ -7,38 +7,35 @@
     (java.util
       UUID)))
 
-;; initial session-instance instance
-(def session-instance (session/init-in-memory))
-
 ;; test add and fetch reify implementations
 (deftest session-protocol-add!-fetch
   (let [user-id (UUID/randomUUID)]
     ;; add user id
-    (session/add! session-instance :user-id {:id user-id})
+    (session/add! session/on-demand :user-id {:id user-id})
     ;; verify if user ids are equal
     (is (= {:id user-id}
-           (session/fetch session-instance :user-id)))))
+           (session/fetch session/on-demand :user-id)))))
 
 ;; test delete! reify implementation
 (deftest session-protocol-delete!
-  (let [_ (session/fetch session-instance :user-id)]
+  (let [_ (session/fetch session/on-demand :user-id)]
     ;; remove user identification
-    (session/delete! session-instance :user-id)
+    (session/delete! session/on-demand :user-id)
     ;; verify if was removed
-    (is (nil? (session/fetch session-instance :user-id)))))
+    (is (nil? (session/fetch session/on-demand :user-id)))))
 
 ;; test erase reify implementation
 (deftest session-protocol-add!-erase!
   (let [user-id (UUID/randomUUID)
         session-id (UUID/randomUUID)]
     ;; add session instance values
-    (session/add! session-instance :user-id {:id user-id})
-    (session/add! session-instance :session-id {:id session-id})
+    (session/add! session/on-demand :user-id {:id user-id})
+    (session/add! session/on-demand :session-id {:id session-id})
     ;; verify if the values exists
-    (is (= {:id user-id} (session/fetch session-instance :user-id)))
-    (is (= {:id session-id} (session/fetch session-instance :session-id)))
+    (is (= {:id user-id} (session/fetch session/on-demand :user-id)))
+    (is (= {:id session-id} (session/fetch session/on-demand :session-id)))
     ;; erase and verify if session instance is empty
-    (is (empty? (session/erase! session-instance)))))
+    (is (empty? (session/erase! session/on-demand)))))
 
 (def simple-request
   "Simple/minimal request example."
@@ -86,7 +83,7 @@
 
 (def session-user-id
   "Instance of the session user id interceptor."
-  (session/user-id-interceptor))
+  session/user-id-interceptor)
 
 ;; test if the session-user-id handles new sessions
 (deftest contains-new-session
@@ -108,6 +105,7 @@
            (.toString (get-in last-resp [:session-data :session-id]))))))
 
 (deftest on-demand-session-protocol-add!-dump-delete!-erase!
+  (session/erase! session/on-demand)
   (let [user-id (UUID/randomUUID)
         session-id (UUID/randomUUID)]
     ;; add session instance values

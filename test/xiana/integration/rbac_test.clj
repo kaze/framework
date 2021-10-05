@@ -7,10 +7,11 @@
     [xiana-fixture :as fixture]
     [xiana.config :as config]
     [xiana.core :as xiana]
+    [xiana.params :as params]
     [xiana.rbac :as rbac]
+    [xiana.route :as x-routes]
     [xiana.session :as session]
-    [xiana.webserver :as ws]
-    [xiana.route :as routes])
+    [xiana.webserver :as ws])
   (:import
     (java.util
       UUID)))
@@ -22,8 +23,7 @@
       (user-permissions :image/all) (xiana/ok state)
       (user-permissions :image/own) (xiana/ok
                                       (let [session-id (get-in state [:request :headers "session-id"])
-                                            session-backend (-> state :deps :session-backend)
-                                            user-id (:users/id (session/fetch session-backend session-id))]
+                                            user-id (:users/id (session/fetch session/on-demand session-id))]
                                         (update state :query sql/merge-where [:= :owner.id user-id]))))))
 
 (defn delete-action [state]
@@ -39,9 +39,6 @@
     ["/image" {:delete {:action     delete-action
                         :permission :image/delete}}]]])
 
-(def backend
-  (session/init-in-memory))
-
 (def role-set
   (-> (b/add-resource {} :image)
       (b/add-action :image [:upload :download :delete])
@@ -53,7 +50,6 @@
 
 (def system-config
   {:routes                  routes
-   :session-backend         backend
    :role-set                role-set
    :controller-interceptors [session/interceptor
                              rbac/interceptor]})
@@ -69,17 +65,20 @@
    :users/id   (str (UUID/randomUUID))})
 
 (deftest delete-request-by-member
-  (let [session-id (str (UUID/randomUUID))]
-    (session/add! backend session-id member)
-    (routes/reset-routes!)
-    (is (= 200 (:status (http/delete "http://localhost:3333/api/image"
-                                     {:throw-exceptions false
-                                      :headers          {"Session-id" session-id}}))))))
+  (let [session-id (UUID/randomUUID)]
+    (session/add! session/on-demand session-id member)
+    (x-routes/reset-routes!)
+    (is (= 200
+           (:status (http/delete "http://localhost:3333/api/image"
+                                 {:throw-exceptions false
+                                  :headers          {"Session-id" session-id}}))))))
 
 (deftest delete-request-by-guest
-  (let [session-id (str (UUID/randomUUID))]
-    (session/add! backend session-id guest)
-    (routes/reset-routes!)
-    (is (= 403 (:status (http/delete "http://localhost:3333/api/image"
-                                     {:throw-exceptions false
-                                      :headers          {"Session-id" session-id}}))))))
+  (let [session-id (UUID/randomUUID)]
+    (session/add! session/on-demand session-id guest)
+    (x-routes/reset-routes!)
+    (is (= [403 "Forbidden"]
+           (-> (http/delete "http://localhost:3333/api/image"
+                            {:throw-exceptions false
+                             :headers          {"Session-id" session-id}})
+               ((juxt :status :body)))))))

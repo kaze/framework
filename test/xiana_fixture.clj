@@ -11,11 +11,9 @@
 
 (defn system
   [config]
-  (let [session-backend (:session-backend config (session-backend/init-in-memory))
-        deps {:webserver               (:xiana.app/web-server config)
+  (let [deps {:webserver               (:xiana.app/web-server config)
               :routes                  (:routes config)
               :role-set                (:role-set config)
-              :session-backend         session-backend
               :router-interceptors     (:router-interceptors config)
               :controller-interceptors (:controller-interceptors config)}]
     (assoc deps :web-server (ws/start deps))))

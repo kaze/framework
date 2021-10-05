@@ -18,7 +18,7 @@
   ;; erase all elements (side effect)
   (erase! [_]))
 
-(defn init-in-memory
+(defn ^:deprecated init-in-memory
   "Initialize session in memory."
   ([] (init-in-memory (atom {})))
   ([m]
@@ -38,7 +38,7 @@
      ;; erase session
      (erase! [_] (reset! m {})))))
 
-(defonce ^:private -on-demand (atom nil))
+(defonce ^:private -on-demand (atom {}))
 
 (def on-demand
   "Initialize session in memory."
@@ -58,38 +58,37 @@
     ;; erase session
     (erase! [_] (reset! -on-demand nil))))
 
-(defn interceptor
+(def interceptor
   "Session interceptor."
-  ([] (interceptor (init-in-memory)))
-  ([session-instance]
-   {:enter
-    (fn [{request :request :as state}]
-      (let [session-id (try (UUID/fromString
-                              (get-in request [:headers :session-id]))
-                            (catch Exception _ nil))
-            session-data (when session-id
-                           (fetch session-instance
-                                  session-id))]
+  {:enter
+   (fn [{request :request :as state}]
+     (let [session-id (try (UUID/fromString
+                             (or (get-in request [:headers :session-id])
+                                 (get-in request [:headers "session-id"])))
+                           (catch Exception _ nil))
+           session-data (when session-id
+                          (fetch on-demand
+                                 session-id))]
 
-        (if session-id
-          ;; associate session in state
-          (xiana/ok (assoc state :session-data session-data))
-          ;; new session
-          (xiana/error {:response {:status 403 :body "Session expired"}}))))
-    :leave
-    (fn [state]
-      (let [session-id (get-in state [:session-data :session-id])]
-        ;; dissociate session data
-        (add! session-instance
-              session-id
-              (dissoc (:session-data state) :new-session))
-        ;; associate the session id
-        (xiana/ok
-          (assoc-in state
-                    [:response :headers "Session-id"]
-                    (str session-id)))))}))
+       (if session-id
+         ;; associate session in state
+         (xiana/ok (assoc state :session-data session-data))
+         ;; new session
+         (xiana/error {:response {:status 403 :body "Session expired"}}))))
+   :leave
+   (fn [state]
+     (let [session-id (get-in state [:session-data :session-id])]
+       ;; dissociate session data
+       (add! on-demand
+             session-id
+             (dissoc (:session-data state) :new-session))
+       ;; associate the session id
+       (xiana/ok
+         (assoc-in state
+                   [:response :headers "Session-id"]
+                   (str session-id)))))})
 
-(defn user-id-interceptor
+(def user-id-interceptor
   "This interceptor handles the session user id management.
   Enter: Get the session id from the request header, if
   that operation doesn't succeeds a new session is created an associated to the
@@ -97,37 +96,35 @@
   Leave: Verify if the state has a session id, if so add it to
   the session instance and remove the new session property of the current state.
   The final step is the association of the session id to the response header."
-  ([] (user-id-interceptor (init-in-memory)))
-  ([session-instance]
-   {:enter
-    (fn [{request :request :as state}]
+  {:enter
+   (fn [{request :request :as state}]
 
-      (let [session-id (try (UUID/fromString
-                              (get-in request [:headers :session-id]))
-                            (catch Exception _ nil))
-            session-data (when session-id
-                           (fetch session-instance
-                                  session-id))]
-        (xiana/ok
-          (if session-data
-            ;; associate session data into state
-            (assoc state :session-data session-data)
-            ;; else, associate a new session
-            (-> (assoc-in state [:session-data :session-id] (UUID/randomUUID))
-                (assoc-in [:session-data :new-session] true))))))
-    :leave
-    (fn [state]
-      (let [session-id (get-in state [:session-data :session-id])]
-        ;; add the session id to the session instance and
-        ;; dissociate the new-session from the current state
-        (add! session-instance
-              session-id
-              (dissoc (:session-data state) :new-session))
-        ;; associate the session id
-        (xiana/ok
-          (assoc-in state
-                    [:response :headers :session-id]
-                    (str session-id)))))}))
+     (let [session-id (try (UUID/fromString
+                             (get-in request [:headers :session-id]))
+                           (catch Exception _ nil))
+           session-data (when session-id
+                          (fetch on-demand
+                                 session-id))]
+       (xiana/ok
+         (if session-data
+           ;; associate session data into state
+           (assoc state :session-data session-data)
+           ;; else, associate a new session
+           (-> (assoc-in state [:session-data :session-id] (UUID/randomUUID))
+               (assoc-in [:session-data :new-session] true))))))
+   :leave
+   (fn [state]
+     (let [session-id (get-in state [:session-data :session-id])]
+       ;; add the session id to the session instance and
+       ;; dissociate the new-session from the current state
+       (add! on-demand
+             session-id
+             (dissoc (:session-data state) :new-session))
+       ;; associate the session id
+       (xiana/ok
+         (assoc-in state
+                   [:response :headers :session-id]
+                   (str session-id)))))})
 
 (defn -user-role
   "Update the user role."

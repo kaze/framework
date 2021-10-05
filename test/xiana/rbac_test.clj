@@ -36,14 +36,12 @@
 
 (defn state
   [user permission]
-  (let [session-id (str (UUID/randomUUID))
-        session-backend (session/init-in-memory)]
-    (session/add! session-backend session-id user)
+  (let [session-id (str (UUID/randomUUID))]
     (config/load-config! {:role-set role-set})
     (reset-role-set!)
     (-> (assoc-in {} [:request-data :permission] permission)
-        (assoc-in [:request :headers "session-id"] session-id)
-        (assoc-in [:deps :session-backend] session-backend))))
+        (assoc :session-data user)
+        (assoc-in [:request :headers "session-id"] session-id))))
 
 (deftest user-permissions
   (is (= #{:image/all}
@@ -77,9 +75,7 @@
     (cond
       (user-permissions :image/all) (xiana/ok ctx)
       (user-permissions :image/own) (xiana/ok
-                                      (let [session-id (get-in ctx [:request :headers "session-id"])
-                                            session-backend (-> ctx :deps :session-backend)
-                                            user-id (:users/id (session/fetch session-backend session-id))]
+                                      (let [user-id (get-in ctx [:session-data :users/id])]
                                         (update ctx :query sql/merge-where [:= :owner.id user-id])))
       :else (xiana/error (assoc ctx :response {:status 403 :body "Invalid permission request"})))))
 
@@ -93,20 +89,20 @@
 (deftest restrictions
   (config/load-config! {:role-set role-set})
   (testing "restriction for own images"
-           (let [user member
-                 image-id (str (UUID/randomUUID))]
-             (is (= {:delete [:*],
-                     :from   [:images],
-                     :where  [:and
-                              [:= :id image-id]
-                              [:= :owner.id (:users/id user)]]}
-                    (-> (xiana/flow-> (state user :image/delete)
-                                      ((:enter interceptor))
-                                      (action image-id)
-                                      ((:leave interceptor)))
-                        xiana/extract
-                        :query))
-                 "Add filter if user has restricted to ':own'")))
+    (let [user member
+          image-id (str (UUID/randomUUID))]
+      (is (= {:delete [:*],
+              :from   [:images],
+              :where  [:and
+                       [:= :id image-id]
+                       [:= :owner.id (:users/id user)]]}
+             (-> (xiana/flow-> (state user :image/delete)
+                               ((:enter interceptor))
+                               (action image-id)
+                               ((:leave interceptor)))
+                 xiana/extract
+                 :query))
+          "Add filter if user has restricted to ':own'")))
   (testing "forbidden action"
     (let [user guest
           image-id (str (UUID/randomUUID))]
