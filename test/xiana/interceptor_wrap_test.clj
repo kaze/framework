@@ -7,7 +7,7 @@
     (java.io
       ByteArrayInputStream)))
 
-(def sample-state
+(def sample-ctx
   {:request  {:ssl-client-cert    nil,
               :protocol           "HTTP/1.1,"
               :remote-addr        "0:0:0:0:0:0:0:1",
@@ -63,21 +63,21 @@
   (let [interceptor (wrap/interceptor {:enter identity
                                        :leave identity
                                        :error identity})
-        state {:request {:uri "/"}}
-        enter ((:enter interceptor) state)
-        leave ((:leave interceptor) state)
-        error ((:error interceptor) state)]
+        ctx {:request {:uri "/"}}
+        enter ((:enter interceptor) ctx)
+        leave ((:leave interceptor) ctx)
+        error ((:error interceptor) ctx)]
     (is (and
-          (= state (:right enter))
-          (= state (:right leave))
-          (= state (:left  error))))))
+          (= ctx (:right enter))
+          (= ctx (:right leave))
+          (= ctx (:left  error))))))
 
 (deftest contains-midleware-enter
   (let [enter (-> (wrap/middleware->enter middleware/wrap-format-request)
                   (:enter))
-        result (enter sample-state)]
+        result (enter sample-ctx)]
     ;; verify middleware identity
-    (is (= (:right result) sample-state))))
+    (is (= (:right result) sample-ctx))))
 
 (deftest contains-midleware-leave
   (let [leave (->
@@ -87,7 +87,7 @@
 
 (deftest contains-middleware-formated-response-body
   (is (= ByteArrayInputStream
-         (-> ((:leave middleware-interceptor) sample-state)
+         (-> ((:leave middleware-interceptor) sample-ctx)
              :right
              :response
              :body

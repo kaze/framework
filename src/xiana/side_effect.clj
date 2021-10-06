@@ -5,7 +5,7 @@
 (def interceptor
   "Side-effect interceptor.
   Enter: nil.
-  Leave: Fetch and execute the state registered
+  Leave: Fetch and execute the context registered
   side-effect procedure, if none was found execute: `xiana/ok`."
   {:leave
    (fn [{side-effect :side-effect :as ctx}]

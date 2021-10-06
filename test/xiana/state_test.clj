@@ -1,16 +1,16 @@
 (ns xiana.state-test
   (:require
     [clojure.test :refer [deftest is]]
-    [xiana.core :as xiana]
-    [xiana.state :as state]))
+    [xiana.context :as context]
+    [xiana.core :as xiana]))
 
-(def state-initial-map
+(def context-initial-map
   {:request  {}
    :response {}})
 
-;; test empty state creation
-(deftest initial-state
-  (let [result (state/make {})
-        expected (xiana/map->State state-initial-map)]
+;; test empty context creation
+(deftest initial-context
+  (let [result (context/make {})
+        expected (xiana/map->Context context-initial-map)]
     ;; verify if the response and expected value are equal
     (is (= result expected))))

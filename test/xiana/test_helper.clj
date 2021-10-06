@@ -5,7 +5,7 @@
 ;; auxiliary function
 (defn fetch-execute
   "Fetch and execute the interceptor function"
-  [state interceptor branch]
-  (->> (list state)
+  [ctx interceptor branch]
+  (->> (list ctx)
        (apply (branch interceptor))
        (xiana/extract)))

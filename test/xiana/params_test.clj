@@ -5,8 +5,8 @@
     [xiana.test-helper :as th]))
 
 (deftest params-execution
-  (let [state {}
-        request (-> state (th/fetch-execute params/interceptor :enter))
+  (let [ctx {}
+        request (-> ctx (th/fetch-execute params/interceptor :enter))
         expected {:request {:form-params {},
                             :params {},
                             :query-params {}}}]

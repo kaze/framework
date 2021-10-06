@@ -11,10 +11,10 @@
      (assoc % :response {:status 200, :body "ok"})))
 
 (deftest side-effect-execution
-  (let [state {:request     {:uri "/"}
-               :side-effect ok-fn}
+  (let [ctx {:request     {:uri "/"}
+             :side-effect ok-fn}
         ;; bind response using the simulated micro/flow
-        response (-> state
+        response (-> ctx
                      (th/fetch-execute side-effect/interceptor :leave)
                      (:response))
         ;; expected response

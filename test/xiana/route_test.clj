@@ -2,9 +2,9 @@
   (:require
     [clojure.test :refer [deftest is testing]]
     [xiana.config :as config]
+    [xiana.context :as context]
     [xiana.core :as xiana]
-    [xiana.route :as route]
-    [xiana.state :as state]))
+    [xiana.route :as route]))
 
 (def sample-request
   {:uri "/" :request-method :get})
@@ -29,8 +29,8 @@
   [_]
   {:status 200 :body "Ok"})
 
-(def test-state
-  "Sample test state."
+(def test-ctx
+  "Sample test ctx."
   {:request {}
    :request-data {:handler test-handler}})
 
@@ -39,10 +39,10 @@
   (route/reset-routes!)
   (testing "test if sample routes was registered correctly"
     (is (= sample-routes (route/routes))))
-  (testing "test route match update request-data (state) functionality"
-    (let [state (-> (state/make sample-request)
-                    (route/match)
-                    (xiana/extract))
+  (testing "test route match update request-data (ctx) functionality"
+    (let [ctx (-> (context/make sample-request)
+                  (route/match)
+                  (xiana/extract))
           ;; expected request data
           expected {:method :get
                     :match  #reitit.core.Match{:template    "/"
@@ -53,9 +53,9 @@
                     :action :action}]
       ;; verify if updated request-data
       ;; is equal to the expected value
-      (is (= expected (:request-data state)))))
-  (testing "test if the updated request-data (state) data handles the"
-    (let [action (-> (state/make sample-not-found-request)
+      (is (= expected (:request-data ctx)))))
+  (testing "test if the updated request-data (context) data handles the"
+    (let [action (-> (context/make sample-not-found-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)
@@ -66,8 +66,8 @@
     ;; (re)set routes
     (config/load-config! {:routes sample-routes-with-handler})
     (route/reset-routes!)
-    ;; get action from the updated state/match (micro) flow computation
-    (let [action (-> (state/make sample-request)
+    ;; get action from the updated context/match (micro) flow computation
+    (let [action (-> (context/make sample-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)
@@ -80,8 +80,8 @@
     ;; (re)set routes
     (config/load-config! {:routes sample-routes-without-action})
     (route/reset-routes!)
-    ;; get action from the updated state/match (micro) flow computation
-    (let [action (-> (state/make sample-request)
+    ;; get action from the updated context/match (micro) flow computation
+    (let [action (-> (context/make sample-request)
                      (route/match)
                      (xiana/extract)
                      (:request-data)
@@ -104,7 +104,7 @@
       (is (= response expected))))
   (testing "test default action handler: ok response"
     (let [response (:response (xiana/extract
-                                (route/default-action test-state)))
+                                (route/default-action test-ctx)))
           expected {:status 200, :body "Ok"}]
       ;; verify if the response and expected value are equal
       (is (= response expected)))))

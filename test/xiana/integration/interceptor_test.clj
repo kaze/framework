@@ -16,8 +16,8 @@
 (def error-interceptor
   {:enter (fn [_] (throw (Exception. "enter-exception")))
    :leave (fn [_] (throw (Exception. "leave-exception")))
-   :error (fn [state] (xiana/error (assoc state :response {:body   "Error"
-                                                           :status 500})))})
+   :error (fn [ctx] (xiana/error (assoc ctx :response {:body   "Error"
+                                                       :status 500})))})
 
 (def system-config
   {:routes test-routes/routes})

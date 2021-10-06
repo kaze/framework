@@ -8,26 +8,26 @@
   handle the interceptor exception if occurs."
   [side interceptor]
   (when-let [f (side interceptor)]
-    (fn [state]
+    (fn [ctx]
       (try
-        (f state)
+        (f ctx)
         (catch Exception e
           (let [f (or (:error interceptor) xiana/error)]
-            (f (-> state (assoc :response
-                                {:status 500
-                                 :body   (Throwable->map e)})))))))))
+            (f (-> ctx (assoc :response
+                              {:status 500
+                               :body   (Throwable->map e)})))))))))
 
 (defn- -execute
   "Execute interceptors functions (the enter/leave procedures)
-  passing the state as its arguments."
-  [state interceptors action]
+  passing the context as its arguments."
+  [ctx interceptors action]
   (let [enter-fns (mapv #(interceptor->fn :enter %) interceptors)
         leave-fns (mapv #(interceptor->fn :leave %) interceptors)
         queue-fns (remove nil? (apply concat [enter-fns action (reverse leave-fns)]))]
     ;; apply flow: execute the queue of interceptors functions
     (if (empty? queue-fns)
-      (xiana/ok state)
-      (xiana/apply-flow-> state queue-fns))))
+      (xiana/ok ctx)
+      (xiana/apply-flow-> ctx queue-fns))))
 
 (defn- -concat
   "Concatenate routes interceptors with the defaults ones,

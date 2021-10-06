@@ -5,16 +5,16 @@
     [xiana.interceptor-queue :as queue]))
 
 (def A-interceptor
-  {:enter (fn [state] (xiana/ok (assoc state :enter "A-enter")))
-   :leave (fn [state] (xiana/ok (assoc state :leave "A-leave")))})
+  {:enter (fn [ctx] (xiana/ok (assoc ctx :enter "A-enter")))
+   :leave (fn [ctx] (xiana/ok (assoc ctx :leave "A-leave")))})
 
 (def B-interceptor
-  {:enter (fn [state] (xiana/ok (assoc state :enter "B-enter")))
-   :leave (fn [state] (xiana/ok (assoc state :leave "B-leave")))})
+  {:enter (fn [ctx] (xiana/ok (assoc ctx :enter "B-enter")))
+   :leave (fn [ctx] (xiana/ok (assoc ctx :leave "B-leave")))})
 
 (def C-interceptor
-  {:enter (fn [state] (xiana/ok (assoc state :enter "C-enter")))
-   :leave (fn [state] (xiana/ok (assoc state :leave "C-leave")))})
+  {:enter (fn [ctx] (xiana/ok (assoc ctx :enter "C-enter")))
+   :leave (fn [ctx] (xiana/ok (assoc ctx :leave "C-leave")))})
 
 ;; Exception
 (def D-interceptor
@@ -24,11 +24,11 @@
 (def E-interceptor
   {:enter (fn [_] (throw (Exception. "enter-exception")))
    :leave (fn [_] (throw (Exception. "leave-exception")))
-   :error (fn [state] (xiana/ok (assoc state :error "Error")))})
+   :error (fn [ctx] (xiana/ok (assoc ctx :error "Error")))})
 
 (def F-interceptor
-  {:enter (fn [state] (xiana/ok (assoc state :enter "F-enter")))
-   :leave (fn [state] (xiana/ok (assoc state :leave "F-leave")))})
+  {:enter (fn [ctx] (xiana/ok (assoc ctx :enter "F-enter")))
+   :leave (fn [ctx] (xiana/ok (assoc ctx :leave "F-leave")))})
 
 (def default-interceptors
   "Default interceptors."
@@ -57,8 +57,8 @@
   #(xiana/error
      (assoc % :response {:status 500 :body "Internal Server error"})))
 
-(defn make-state
-  "Return a simple state request data."
+(defn make-context
+  "Return a simple context request data."
   [action interceptors]
   {:request-data
    {:action action
@@ -66,10 +66,10 @@
 
 ;; test a simple interceptor queue ok execution
 (deftest queue-simple-ok-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action [])
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action [])
         ;; get response using a simple micro flow
-        response (-> state
+        response (-> ctx
                      (queue/execute [])
                      (xiana/extract)
                      (:response))
@@ -79,10 +79,10 @@
 
 ;; test a simple interceptor queue execution
 (deftest queue-simple-error-execution
-  ;; construct a simple request data state
-  (let [state (make-state error-action [])
+  ;; construct a simple request data context
+  (let [ctx (make-context error-action [])
         ;; get response using a simple micro flow
-        response (-> state
+        response (-> ctx
                      (queue/execute [])
                      (xiana/extract)
                      (:response))
@@ -92,16 +92,16 @@
 
 ;; test default interceptors queue execution
 (deftest queue-default-interceptors-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action nil)
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action nil)
         ;; get response using a simple micro flow
-        result (-> state
+        result (-> ctx
                    (queue/execute default-interceptors)
                    (xiana/extract))
         response (:response result)
         expected {:status 200 :body "ok"}
-        enter    (:enter result)
-        leave    (:leave result)]
+        enter (:enter result)
+        leave (:leave result)]
     ;; verify if response is equal to the expected
     (is (and
           (= enter "A-enter")
@@ -110,10 +110,10 @@
 
 ;; test a simple interceptor error queue execution
 (deftest queue-interceptor-exception-default-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action [D-interceptor])
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action [D-interceptor])
         ;; get error response using a simple micro flow
-        cause (-> state
+        cause (-> ctx
                   (queue/execute [])
                   (xiana/extract)
                   (:response)
@@ -125,10 +125,10 @@
 
 ;; test a simple interceptor error queue execution
 (deftest queue-interceptor-error-exception-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action [E-interceptor])
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action [E-interceptor])
         ;; get error response using a simple micro flow
-        error (-> state
+        error (-> ctx
                   (queue/execute [])
                   (xiana/extract)
                   (:error))
@@ -138,14 +138,14 @@
 
 ;; test inside interceptors queue execution
 (deftest queue-inside-interceptors-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action inside-interceptors)
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action inside-interceptors)
         ;; get response using a simple micro flow
-        result (-> state
+        result (-> ctx
                    (queue/execute default-interceptors)
                    (xiana/extract))
-        response   (:response result)
-        expected   {:status 200 :body "ok"}
+        response (:response result)
+        expected {:status 200 :body "ok"}
         last-enter (:enter result)
         last-leave (:leave result)]
     ;; verify if response is equal to the expected
@@ -156,14 +156,14 @@
 
 ;; test around interceptors queue execution
 (deftest queue-around-interceptors-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action around-interceptors)
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action around-interceptors)
         ;; get response using a simple micro flow
-        result (-> state
+        result (-> ctx
                    (queue/execute default-interceptors)
                    (xiana/extract))
-        response   (:response result)
-        expected   {:status 200 :body "ok"}
+        response (:response result)
+        expected {:status 200 :body "ok"}
         last-enter (:enter result)
         last-leave (:leave result)]
     ;; verify if response is equal to the expected
@@ -174,14 +174,14 @@
 
 ;; test inside/around interceptors queue execution
 (deftest queue-both-interceptors-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action both-interceptors)
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action both-interceptors)
         ;; get response using a simple micro flow
-        result (-> state
+        result (-> ctx
                    (queue/execute default-interceptors)
                    (xiana/extract))
-        response   (:response result)
-        expected   {:status 200 :body "ok"}
+        response (:response result)
+        expected {:status 200 :body "ok"}
         last-enter (:enter result)
         last-leave (:leave result)]
     ;; verify if response is equal to the expected
@@ -192,14 +192,14 @@
 
 ;; test override interceptors queue execution
 (deftest queue-override-interceptors-execution
-  ;; construct a simple request data state
-  (let [state (make-state ok-action override-interceptors)
+  ;; construct a simple request data context
+  (let [ctx (make-context ok-action override-interceptors)
         ;; get response using a simple micro flow
-        result (-> state
+        result (-> ctx
                    (queue/execute default-interceptors)
                    (xiana/extract))
-        response   (:response result)
-        expected   {:status 200 :body "ok"}
+        response (:response result)
+        expected {:status 200 :body "ok"}
         last-enter (:enter result)
         last-leave (:leave result)]
     ;; verify if response is equal to the expected

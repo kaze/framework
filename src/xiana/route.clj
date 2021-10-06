@@ -10,20 +10,20 @@
 
 (defn not-found
   "Default not-found response handler helper."
-  [state]
+  [ctx]
   (xiana/error
-    (-> state
+    (-> ctx
         (assoc :response {:status 404 :body "Not Found"}))))
 
 (defn default-action
   "Default action response handler helper."
-  [{request :request {handler :handler} :request-data :as state}]
+  [{request :request {handler :handler} :request-data :as ctx}]
   (try
     (xiana/ok
-      (assoc state :response (handler request)))
+      (assoc ctx :response (handler request)))
     (catch Exception e
       (xiana/error
-        (-> state
+        (-> ctx
             (assoc :error e)
             (assoc :response
                    {:status 500 :body "Internal Server error"}))))))
@@ -41,8 +41,8 @@
        (-> ~t ~k ~m ~p)))
 
 (defn- -update
-  "Update state with router match template data."
-  [match {request :request :as state}]
+  "Update context with router match template data."
+  [match {request :request :as ctx}]
   (let [method (:request-method request)
         handler (-get-in-template match method :result :handler)
         action (-get-in-template match method :data :action)
@@ -50,7 +50,7 @@
         interceptors (-get-in-template match method :data :interceptors)]
     ;; associate the necessary route match information
     (xiana/ok
-      (-> state
+      (-> ctx
           (?assoc-in [:request-data :method] method)
           (?assoc-in [:request-data :handler] handler)
           (?assoc-in [:request-data :interceptors] interceptors)
@@ -63,8 +63,8 @@
                           not-found)))))))
 
 (defn match
-  "Associate router match template data into the state.
-  Return the wrapped state container."
+  "Associate router match template data into the context.
+  Return the wrapped context container."
   [{request :request :as ctx}]
   (let [match (r/match-by-path (r/router (routes)) (:uri request))]
     (-update match ctx)))

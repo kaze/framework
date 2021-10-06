@@ -11,21 +11,21 @@
      (assoc % :response {:status 200, :body "ok"})))
 
 (defn restriction-fn
-  [state]
-  (let [user-permissions (get-in state [:request-data :user-permissions])]
+  [ctx]
+  (let [user-permissions (get-in ctx [:request-data :user-permissions])]
     (cond
-      (user-permissions :image/all) (xiana/ok state)
+      (user-permissions :image/all) (xiana/ok ctx)
       (user-permissions :image/own) (xiana/ok
-                                      (let [session-id (get-in state [:request :headers "session-id"])
+                                      (let [session-id (get-in ctx [:request :headers "session-id"])
                                             user-id (:users/id (session/fetch session/on-demand session-id))]
-                                        (update state :query sql/merge-where [:= :owner.id user-id]))))))
+                                        (update ctx :query sql/merge-where [:= :owner.id user-id]))))))
 
-(defn delete-action [state]
+(defn delete-action [ctx]
   (xiana/ok
-    (-> state
+    (-> ctx
         (assoc :query {:delete [:*]
                        :from   [:images]
-                       :where  [:= :id (get-in state [:params :image-id])]})
+                       :where  [:= :id (get-in ctx [:params :image-id])]})
         (assoc-in [:request-data :restriction-fn] restriction-fn))))
 
 (def routes

@@ -61,7 +61,7 @@
 (def interceptor
   "Session interceptor."
   {:enter
-   (fn [{request :request :as state}]
+   (fn [{request :request :as ctx}]
      (let [session-id (try (UUID/fromString
                              (or (get-in request [:headers :session-id])
                                  (get-in request [:headers "session-id"])))
@@ -71,20 +71,20 @@
                                  session-id))]
 
        (if session-id
-         ;; associate session in state
-         (xiana/ok (assoc state :session-data session-data))
+         ;; associate session in context
+         (xiana/ok (assoc ctx :session-data session-data))
          ;; new session
          (xiana/error {:response {:status 403 :body "Session expired"}}))))
    :leave
-   (fn [state]
-     (let [session-id (get-in state [:session-data :session-id])]
+   (fn [ctx]
+     (let [session-id (get-in ctx [:session-data :session-id])]
        ;; dissociate session data
        (add! on-demand
              session-id
-             (dissoc (:session-data state) :new-session))
+             (dissoc (:session-data ctx) :new-session))
        ;; associate the session id
        (xiana/ok
-         (assoc-in state
+         (assoc-in ctx
                    [:response :headers "Session-id"]
                    (str session-id)))))})
 
@@ -92,12 +92,12 @@
   "This interceptor handles the session user id management.
   Enter: Get the session id from the request header, if
   that operation doesn't succeeds a new session is created an associated to the
-  current state, otherwise the cached session data is used.
-  Leave: Verify if the state has a session id, if so add it to
-  the session instance and remove the new session property of the current state.
+  current context, otherwise the cached session data is used.
+  Leave: Verify if the context has a session id, if so add it to
+  the session instance and remove the new session property of the current context.
   The final step is the association of the session id to the response header."
   {:enter
-   (fn [{request :request :as state}]
+   (fn [{request :request :as ctx}]
 
      (let [session-id (try (UUID/fromString
                              (get-in request [:headers :session-id]))
@@ -107,46 +107,46 @@
                                  session-id))]
        (xiana/ok
          (if session-data
-           ;; associate session data into state
-           (assoc state :session-data session-data)
+           ;; associate session data into context
+           (assoc ctx :session-data session-data)
            ;; else, associate a new session
-           (-> (assoc-in state [:session-data :session-id] (UUID/randomUUID))
+           (-> (assoc-in ctx [:session-data :session-id] (UUID/randomUUID))
                (assoc-in [:session-data :new-session] true))))))
    :leave
-   (fn [state]
-     (let [session-id (get-in state [:session-data :session-id])]
+   (fn [ctx]
+     (let [session-id (get-in ctx [:session-data :session-id])]
        ;; add the session id to the session instance and
-       ;; dissociate the new-session from the current state
+       ;; dissociate the new-session from the current context
        (add! on-demand
              session-id
-             (dissoc (:session-data state) :new-session))
+             (dissoc (:session-data ctx) :new-session))
        ;; associate the session id
        (xiana/ok
-         (assoc-in state
+         (assoc-in ctx
                    [:response :headers :session-id]
                    (str session-id)))))})
 
 (defn -user-role
   "Update the user role."
-  [state role]
-  (assoc-in state [:session-data :user] {:role role}))
+  [ctx role]
+  (assoc-in ctx [:session-data :user] {:role role}))
 
 (defn user-role-interceptor
   "This interceptor updates session data user role:authorization
   from the given request header.
-  Enter: Fetch the authorization from its request/state
-  if succeeds update the current state with that information,
+  Enter: Fetch the authorization from its request/context
+  if succeeds update the current context with that information,
   also update the user role with a custom value or the default :guest.
   Leave: nil."
   ([]
    (user-role-interceptor -user-role :guest))
   ([f role]
    {:enter
-    (fn [{request :request :as state}]
+    (fn [{request :request :as ctx}]
       (let [auth (get-in request [:headers :authorization])]
         (xiana/ok
           (->
             ;; f: function to update/associate the user role
-            (f state role)
+            (f ctx role)
             ;; associate authorization into session-data
             (assoc-in [:session-data :authorization] auth)))))}))

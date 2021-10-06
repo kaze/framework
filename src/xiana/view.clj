@@ -5,7 +5,7 @@
 (def interceptor
   "View interceptor.
   Enter: nil.
-  Leave: Fetch and execute the state view registered
+  Leave: Fetch and execute the context view registered
   procedure, if none was found execute: `xiana/ok`."
   {:leave
    (fn [{view :view :as ctx}]

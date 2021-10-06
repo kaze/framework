@@ -3,8 +3,8 @@
     [cats.core :as m]
     [cats.monad.either :as me]))
 
-;; state/context record definition
-(defrecord State
+;; context record definition
+(defrecord Context
   [request request-data response session-data])
 
 ;; monad.either/right container alias
@@ -23,17 +23,17 @@
 (defmacro apply-flow->
   "Simple macro that applies Haskell-style left associative bind to a
   queue of functions."
-  [state & queue]
-  `(apply m/>>= (ok ~state) ~@queue))
+  [ctx & queue]
+  `(apply m/>>= (ok ~ctx) ~@queue))
 
 (defmacro flow->
   "Expand a single form to (form) or the sequence of forms to:
   (lambda (x) (form1 x), (lambda (x) (form2 x)) ...
   and perform Haskell-style left-associative bind using the
   monad.either/right context (wrapped)."
-  [state & forms]
+  [ctx & forms]
   `(m/>>=
-     (ok ~state)
+     (ok ~ctx)
      ~@(for [form forms]
          (if (seq? form)
            `(fn [~'x] (~(first form) ~'x ~@(rest form)))

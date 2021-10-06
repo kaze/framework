@@ -116,14 +116,14 @@
   "Database access interceptor.
   Enter: nil.
   Leave: Fetch and execute a given query using the database
-  driver, if succeeds associate its results into state response data.
+  driver, if succeeds associate its results into context response data.
   Remember the entry query must be a sql-map, e.g:
   {:select [:*] :from [:users]}."
   {:leave
-   (fn [{query :query :as state}]
+   (fn [{query :query :as ctx}]
      (xiana/ok
        (if query
-         (assoc-in state
+         (assoc-in ctx
                    [:response-data :db-data]
                    (execute query))
-         state)))})
+         ctx)))})

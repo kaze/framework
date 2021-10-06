@@ -6,18 +6,18 @@
 
 (deftest log-interceptor-execution
   (let [interceptor message/log
-        state {}
-        enter ((:enter interceptor) state)
-        leave ((:leave interceptor) state)]
+        ctx {}
+        enter ((:enter interceptor) ctx)
+        leave ((:leave interceptor) ctx)]
     ;; verify log execution
-    (is (and (= enter (xiana/ok state))
-             (= leave (xiana/ok state))))))
+    (is (and (= enter (xiana/ok ctx))
+             (= leave (xiana/ok ctx))))))
 
 (deftest msg-interceptor-execution
   (let [interceptor (message/message "")
-        state {}
-        enter ((:enter interceptor) state)
-        leave ((:leave interceptor) state)]
+        ctx {}
+        enter ((:enter interceptor) ctx)
+        leave ((:leave interceptor) ctx)]
     ;; verify msg execution
-    (is (and (= enter (xiana/ok state))
-             (= leave (xiana/ok state))))))
+    (is (and (= enter (xiana/ok ctx))
+             (= leave (xiana/ok ctx))))))

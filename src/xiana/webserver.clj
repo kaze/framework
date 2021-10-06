@@ -2,10 +2,10 @@
   (:require
     [ring.adapter.jetty :as jetty]
     [xiana.config :as config]
+    [xiana.context :as context]
     [xiana.core :as xiana]
     [xiana.interceptor-queue :as interceptor.queue]
-    [xiana.route :as route]
-    [xiana.state :as state]))
+    [xiana.route :as route]))
 
 ;; web server reference
 (defonce -webserver (atom {}))
@@ -14,11 +14,11 @@
   "Return jetty server handler function."
   (fn handle*
     ([http-request]
-     (let [state (state/make http-request)
+     (let [ctx (context/make http-request)
            queue (list #(interceptor.queue/execute % (:router-interceptors @-webserver) false)
                        #(route/match %)
                        #(interceptor.queue/execute % (:controller-interceptors @-webserver)))]
-       (-> (xiana/apply-flow-> state queue)
+       (-> (xiana/apply-flow-> ctx queue)
            ;; extract
            (xiana/extract)
            ;; get the response

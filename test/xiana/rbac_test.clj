@@ -33,7 +33,7 @@
   {:users/role :mixed
    :users/id   (str (UUID/randomUUID))})
 
-(defn state
+(defn ctx
   [user permission]
   (let [session-id (str (UUID/randomUUID))]
     (config/load-config! {:role-set role-set})
@@ -44,27 +44,27 @@
 
 (deftest user-permissions
   (is (= #{:image/all}
-         (-> ((:enter interceptor) (state guest :image/download))
+         (-> ((:enter interceptor) (ctx guest :image/download))
              xiana/extract
              :request-data
              :user-permissions)))
   (is (= #{:image/all}
-         (-> ((:enter interceptor) (state member :image/download))
+         (-> ((:enter interceptor) (ctx member :image/download))
              xiana/extract
              :request-data
              :user-permissions)))
   (is (= #{:image/all}
-         (-> ((:enter interceptor) (state member :image/upload))
+         (-> ((:enter interceptor) (ctx member :image/upload))
              xiana/extract
              :request-data
              :user-permissions)))
   (is (= #{:image/own}
-         (-> ((:enter interceptor) (state member :image/delete))
+         (-> ((:enter interceptor) (ctx member :image/delete))
              xiana/extract
              :request-data
              :user-permissions)))
   (is (= {:status 403 :body "Forbidden"}
-         (-> ((:enter interceptor) (state guest :image/upload))
+         (-> ((:enter interceptor) (ctx guest :image/upload))
              xiana/extract
              :response))))
 
@@ -78,8 +78,8 @@
                                         (update ctx :query sql/merge-where [:= :owner.id user-id])))
       :else (xiana/error (assoc ctx :response {:status 403 :body "Invalid permission request"})))))
 
-(defn action [state image-id]
-  (xiana/ok (-> state
+(defn action [ctx image-id]
+  (xiana/ok (-> ctx
                 (assoc :query {:delete [:*]
                                :from   [:images]
                                :where  [:= :id image-id]})
@@ -95,7 +95,7 @@
               :where  [:and
                        [:= :id image-id]
                        [:= :owner.id (:users/id user)]]}
-             (-> (xiana/flow-> (state user :image/delete)
+             (-> (xiana/flow-> (ctx user :image/delete)
                                ((:enter interceptor))
                                (action image-id)
                                ((:leave interceptor)))
@@ -107,7 +107,7 @@
           image-id (str (UUID/randomUUID))]
       (is (= {:body   "Forbidden"
               :status 403}
-             (-> (xiana/flow-> (state user :image/delete)
+             (-> (xiana/flow-> (ctx user :image/delete)
                                ((:enter interceptor))
                                (action image-id)
                                ((:leave interceptor)))
@@ -120,7 +120,7 @@
       (is (= {:delete [:*],
               :from   [:images],
               :where  [:= :id image-id]}
-             (-> (xiana/flow-> (state user :image/delete)
+             (-> (xiana/flow-> (ctx user :image/delete)
                                ((:enter interceptor))
                                (action image-id)
                                ((:leave interceptor)))
@@ -128,11 +128,11 @@
                  :query))
           "Processing multiple restrictions in order")))
   (testing "not defined permission"
-    (let [state (-> (state {} :image/delete)
-                    (assoc-in [:request-data :user-permissions] #{:image/none})
-                    (assoc-in [:request-data :restriction-fn] restriction-fn))]
+    (let [ctx (-> (ctx {} :image/delete)
+                  (assoc-in [:request-data :user-permissions] #{:image/none})
+                  (assoc-in [:request-data :restriction-fn] restriction-fn))]
       (is (= {:status 403, :body "Invalid permission request"}
-             (-> (xiana/flow-> state
+             (-> (xiana/flow-> ctx
                                ((:leave interceptor)))
                  xiana/extract
                  :response))
