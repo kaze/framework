@@ -2,40 +2,15 @@
   (:require
     [clj-http.client :as http]
     [clojure.test :refer [deftest is use-fixtures]]
-    [honeysql.helpers :as sql]
     [tiny-rbac.builder :as b]
     [xiana-fixture :as fixture]
-    [xiana.core :as xiana]
+    [xiana.integration.integration-helpers :as test-routes]
     [xiana.rbac :as rbac]
     [xiana.route :as x-routes]
-    [xiana.session :as session]
-    [xiana.webserver :as ws])
+    [xiana.session :as session])
   (:import
     (java.util
       UUID)))
-
-(defn restriction-fn
-  [state]
-  (let [user-permissions (get-in state [:request-data :user-permissions])]
-    (cond
-      (user-permissions :image/all) (xiana/ok state)
-      (user-permissions :image/own) (xiana/ok
-                                      (let [session-id (get-in state [:request :headers "session-id"])
-                                            user-id (:users/id (session/fetch session/on-demand session-id))]
-                                        (update state :query sql/merge-where [:= :owner.id user-id]))))))
-
-(defn delete-action [state]
-  (xiana/ok
-    (-> state
-        (assoc :query {:delete [:*]
-                       :from   [:images]
-                       :where  [:= :id (get-in state [:params :image-id])]})
-        (assoc-in [:request-data :restriction-fn] restriction-fn))))
-
-(def routes
-  [["/api" {:handler ws/handler-fn}
-    ["/image" {:delete {:action     delete-action
-                        :permission :image/delete}}]]])
 
 (def role-set
   (-> (b/add-resource {} :image)
@@ -47,7 +22,7 @@
       (b/add-permission :member :image :delete :own)))
 
 (def system-config
-  {:routes                  routes
+  {:routes                  test-routes/routes
    :role-set                role-set
    :controller-interceptors [session/interceptor
                              rbac/interceptor]})
@@ -67,7 +42,7 @@
     (session/add! session/on-demand session-id member)
     (x-routes/reset-routes!)
     (is (= 200
-           (:status (http/delete "http://localhost:3333/api/image"
+           (:status (http/delete "http://localhost:3333/api/rbac"
                                  {:throw-exceptions false
                                   :headers          {"Session-id" session-id}}))))))
 
@@ -76,7 +51,7 @@
     (session/add! session/on-demand session-id guest)
     (x-routes/reset-routes!)
     (is (= [403 "Forbidden"]
-           (-> (http/delete "http://localhost:3333/api/image"
+           (-> (http/delete "http://localhost:3333/api/rbac"
                             {:throw-exceptions false
                              :headers          {"Session-id" session-id}})
                ((juxt :status :body)))))))
