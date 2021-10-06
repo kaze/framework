@@ -15,7 +15,7 @@
           (let [f (or (:error interceptor) xiana/error)]
             (f (-> ctx (assoc :response
                               {:status 500
-                               :body   (Throwable->map e)})))))))))
+                               :body   (.getMessage e)})))))))))
 
 (defn- -execute
   "Execute interceptors functions (the enter/leave procedures)

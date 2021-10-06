@@ -15,9 +15,7 @@
 
 (def error-interceptor
   {:enter (fn [_] (throw (Exception. "enter-exception")))
-   :leave (fn [_] (throw (Exception. "leave-exception")))
-   :error (fn [ctx] (xiana/error (assoc ctx :response {:body   "Error"
-                                                       :status 500})))})
+   :leave (fn [_] (throw (Exception. "leave-exception")))})
 
 (def system-config
   {:routes test-routes/routes})
@@ -37,7 +35,7 @@
   (config/load-config! (assoc system-config :router-interceptors [error-interceptor]))
   (ws/reset-interceptors!)
   (route/reset-routes!)
-  (is (= [500 "Error"]
+  (is (= [500 "enter-exception"]
          (-> (http/get "http://localhost:3333/api/interceptor"
                        {:throw-exceptions false})
              ((juxt :status :body))))))
