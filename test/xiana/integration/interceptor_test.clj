@@ -6,6 +6,7 @@
     [xiana.config :as config]
     [xiana.core :as xiana]
     [xiana.integration.integration-helpers :as test-routes]
+    [xiana.route :as route]
     [xiana.webserver :as ws]))
 
 (def ok-interceptor
@@ -26,6 +27,7 @@
 (deftest ok-without-interceptors
   (config/load-config! system-config)
   (ws/reset-interceptors!)
+  (route/reset-routes!)
   (is (= [200 "ok"]
          (-> (http/get "http://localhost:3333/api/interceptor"
                        {:throw-exceptions false})
@@ -34,6 +36,7 @@
 (deftest error-in-router-interceptors
   (config/load-config! (assoc system-config :router-interceptors [error-interceptor]))
   (ws/reset-interceptors!)
+  (route/reset-routes!)
   (is (= [500 "Error"]
          (-> (http/get "http://localhost:3333/api/interceptor"
                        {:throw-exceptions false})

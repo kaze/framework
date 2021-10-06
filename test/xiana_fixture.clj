@@ -37,4 +37,4 @@
         app/start)
     (f)
     (finally
-      (ws/stop))))
+      (app/stop))))

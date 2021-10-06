@@ -36,3 +36,6 @@
   [k]
   (when (nil? @-config) (load-config!))
   (get @-config k (get @-config (app-keyword k))))
+
+(defn reset-config! []
+  (reset! -config nil))
