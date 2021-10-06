@@ -24,10 +24,10 @@
 
 (deftest start-webserver
   ;; verify if initial instance is clean
-  (is (or (nil? @webserver/-webserver)
-          (.isStopped @webserver/-webserver)))
+  (is (or (empty? @webserver/-webserver)
+          (.isStopped (:server @webserver/-webserver))))
   ;; start the server and fetch it
-  (is (= (type (webserver/start))
+  (is (= (type (:server (webserver/start)))
          Server)))
 
 ;; test jetty handler function call
@@ -39,5 +39,5 @@
 
 (deftest stop-webserver
   (webserver/stop)
-  (is (or (nil? @webserver/-webserver)
-          (.isStopped @webserver/-webserver))))
+  (is (or (empty? @webserver/-webserver)
+          (.isStopped (:server @webserver/-webserver)))))
