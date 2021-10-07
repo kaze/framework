@@ -46,15 +46,12 @@
 (defn execute
   "Execute the interceptors queue and invoke the
   action procedure between its enter-leave stacks."
-  ([ctx default-interceptors]
-   (execute ctx default-interceptors true))
-  ([ctx default-interceptors enable-route-override?]
-   (let [interceptors (if enable-route-override?
-                        (-concat
-                          (get-in ctx [:request-data :interceptors])
-                          default-interceptors)
-                        default-interceptors)
-         action (vector (get-in ctx [:request-data :action]))]
-     ;; execute the interceptors queue calling the action
-     ;; between its enter/leave stacks
-     (-execute ctx interceptors action))))
+  [ctx default-interceptors]
+  (let [interceptors (-concat
+                       (get-in ctx [:request-data :interceptors])
+                       default-interceptors)
+        action (vector (get-in ctx [:request-data :action]))]
+    ;; execute the interceptors queue calling the action
+    ;; between its enter/leave stacks
+    (-execute ctx interceptors action)))
+

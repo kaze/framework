@@ -15,7 +15,7 @@
   (fn handle*
     ([http-request]
      (let [ctx (context/make http-request)
-           queue (list #(interceptor.queue/execute % (:router-interceptors @-webserver) false)
+           queue (list #(interceptor.queue/execute % (:router-interceptors @-webserver))
                        #(route/match %)
                        #(interceptor.queue/execute % (:controller-interceptors @-webserver)))]
        (-> (xiana/apply-flow-> ctx queue)
