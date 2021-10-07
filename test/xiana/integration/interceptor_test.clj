@@ -24,7 +24,7 @@
 
 (deftest ok-without-interceptors
   (config/load-config! system-config)
-  (ws/reset-interceptors!)
+  (ws/reload-interceptors!)
   (route/reset-routes!)
   (is (= [200 "ok"]
          (-> (http/get "http://localhost:3333/api/interceptor"
@@ -33,7 +33,7 @@
 
 (deftest error-in-router-interceptors
   (config/load-config! (assoc system-config :router-interceptors [error-interceptor]))
-  (ws/reset-interceptors!)
+  (ws/reload-interceptors!)
   (route/reset-routes!)
   (is (= [500 "enter-exception"]
          (-> (http/get "http://localhost:3333/api/interceptor"
@@ -42,7 +42,7 @@
 
 (deftest action-overrides-router-interceptors
   (config/load-config! (assoc system-config :router-interceptors [ok-interceptor]))
-  (ws/reset-interceptors!)
+  (ws/reload-interceptors!)
   (is (= [200 "ok"]
          (-> (http/get "http://localhost:3333/api/interceptor"
                        {:throw-exceptions false})
@@ -50,7 +50,7 @@
 
 (deftest controller-interceptor-overrides-action
   (config/load-config! (assoc system-config :controller-interceptors [ok-interceptor]))
-  (ws/reset-interceptors!)
+  (ws/reload-interceptors!)
   (is (= [200 "ok interceptor"]
          (-> (http/get "http://localhost:3333/api/interceptor"
                        {:throw-exceptions false})

@@ -5,7 +5,10 @@
     [xiana.context :as context]
     [xiana.core :as xiana]
     [xiana.interceptor-queue :as interceptor.queue]
-    [xiana.route :as route]))
+    [xiana.route :as route])
+  (:import
+    (org.eclipse.jetty.server
+      Server)))
 
 ;; web server reference
 (defonce -webserver (atom {}))
@@ -31,10 +34,10 @@
   []
   ;; stop the server if necessary
   (when (:server @-webserver)
-    (.stop (:server @-webserver)))
+    (.stop ^Server (:server @-webserver)))
   (reset! -webserver {}))
 
-(defn reset-interceptors!
+(defn reload-interceptors!
   []
   (swap! -webserver assoc
          :router-interceptors (config/get-spec :router-interceptors)
